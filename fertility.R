@@ -1,6 +1,8 @@
 library(readxl)
 library(tidyverse)
 library(fda)
+library(dplyr)
+library(tidyr)
 
 data <- read_excel("C:/Users/tucas/Downloads/undesa_pd_2019_world_fertility_dataset.xlsx", 
                    sheet = "FERTILITY INDICATORS", skip = 6)
@@ -83,6 +85,42 @@ for (country in unique_countries) {
 # Plot the smoothed function for Germany
 plot(smoothed_fds[["Germany"]], xlab = "Year", ylab = "Log Fertility Rate", main = "Smoothed Fertility Rate - Germany")
 
+# Step 1: Dynamically evaluate the fd objects at a sequence of points based on each country's data range
+evaluated_curves <- list()  # Initialize an empty list to store the evaluated curves
+
+for (country in names(smoothed_fds)) {
+  # Determine the specific data range for each country
+  country_data <- final_data[final_data$`Country or Area` == country, ]
+  years_range <- range(country_data$Date)
+  
+  # Create a sequence of evaluation points for the current country's data range
+  years_to_evaluate_country <- seq(from = years_range[1], to = years_range[2], length.out = 100)
+  
+  # Evaluate the fd object for the country over its specific range of years
+  evaluated_curve <- eval.fd(years_to_evaluate_country, smoothed_fds[[country]])
+  
+  # Store the evaluated curve in a data frame format in the list
+  evaluated_curves[[country]] <- data.frame(Country = country,
+                                            Year = years_to_evaluate_country,
+                                            LogFertilityRate = evaluated_curve)
+}
+
+# Step 2: Combine the evaluated curves for all countries into a single data frame
+curves_df <- do.call(rbind, evaluated_curves)
+
+# Add continent information to curves_df
+curves_df$Continent <- ifelse(curves_df$Country %in% largest_european_countries, "Europe", "Asia")
+
+# Step 3: Plot using ggplot2
+ggplot(curves_df, aes(x = Year, y = LogFertilityRate, color = Continent, group = Country)) +
+  geom_line() +
+  scale_color_manual(values = c("Europe" = "blue", "Asia" = "red")) +
+  labs(title = "Smoothed Fertility Rates Over Time by Continent",
+       x = "Year",
+       y = "Log Fertility Rate",
+       color = "Continent") +
+  theme_minimal() +
+  theme(legend.position = "bottom")
 
 
 
