@@ -3,6 +3,7 @@ library(tidyverse)
 library(fda)
 library(dplyr)
 library(tidyr)
+library(zoo)
 
 data <- read_excel("C:/Users/tucas/Downloads/undesa_pd_2019_world_fertility_dataset.xlsx", 
                    sheet = "FERTILITY INDICATORS", skip = 6)
@@ -40,7 +41,7 @@ final_data$ValueLog = log(final_data$Value)
 
 
 # Draw the graph
-ggplot(final_data, aes(x = Date, y = ValueLog, group = `Country or Area`, color = `Continent`)) +
+ggplot(filtered_data, aes(x = Date, y = ValueLog, group = `Country or Area`, color = `Continent`)) +
   geom_line() + # Draw lines for each country
   scale_color_manual(values = c("Europe" = "blue", "Asia" = "red")) + # Set colors for continents
   labs(title = "Fertility Rates Over Time by Continent",
@@ -52,91 +53,48 @@ ggplot(final_data, aes(x = Date, y = ValueLog, group = `Country or Area`, color 
 
 ######### Continue with smoothing
 
-# Setup
-range_of_years <- range(final_data$Date)
-n_basis <- 4
-bspline_basis <- create.bspline.basis(rangeval=range_of_years, nbasis=n_basis, norder=4)
+# Get the range of years
+range_of_dates <- range(final_data$Date)
 
-# Initialize a list to store the smoothed functional data objects
-smoothed_fds <- list()
+# Set up the B-spline basis object
+nbasis <-  5  # Can experiment, but this one seems to work the best
+basis_obj <- create.bspline.basis(rangeval=range_of_dates, nbasis=nbasis, norder=4)
 
-# Loop through each country
-unique_countries <- unique(final_data$`Country or Area`)
-for (country in unique_countries) {
-  # Extract data for the current country
-  country_data <- filter(final_data, `Country or Area` == country)
+# Initialize an empty list for storing fd objects for each country
+country_fds <- list()
+
+for(country in unique(final_data$`Country or Area`)) {
+  country_data <- subset(final_data, `Country or Area` == country)
   
-  # Ensure the data is sorted by Date
-  country_data <- country_data[order(country_data$Date), ]
-  
-  # Create a matrix of the values to be smoothed, with dates as argvals
-  value_matrix <- matrix(country_data$ValueLog, ncol = 1)  # One column per country
   argvals <- country_data$Date
+  y <- country_data$ValueLog
   
-  # Perform the smoothing
-  fd_obj <- smooth.basis(argvals=argvals, y=value_matrix, fdParobj=bspline_basis)
+  fdParObj <- fdPar(basis_obj, Lfdobj=int2Lfd(2), lambda=1e-6)  # Lambda controls the smoothness
+  smooth_res <- smooth.basis(argvals, y, fdParObj)
   
-  # Store the smoothed functional data object for the country
-  smoothed_fds[[country]] <- fd_obj$fd
+  # Store the fd object for each country
+  country_fds[[country]] <- smooth_res$fd
 }
 
-#### Plotting
+# Combine the coefficients from each fd object into a single matrix
+coefs <- do.call(cbind, lapply(country_fds, function(fd) fd$coefs))
 
-# Plot the smoothed function for Germany
-plot(smoothed_fds[["Germany"]], xlab = "Year", ylab = "Log Fertility Rate", main = "Smoothed Fertility Rate - Germany")
+# Create a new fd object using the combined coefficients and the common basis object
+combined_fd <- fd(coefs, basis_obj)
 
-# Step 1: Dynamically evaluate the fd objects at a sequence of points based on each country's data range
-evaluated_curves <- list()  # Initialize an empty list to store the evaluated curves
+plot(combined_fd)
 
-for (country in names(smoothed_fds)) {
-  # Determine the specific data range for each country
-  country_data <- final_data[final_data$`Country or Area` == country, ]
-  years_range <- range(country_data$Date)
-  
-  # Create a sequence of evaluation points for the current country's data range
-  years_to_evaluate_country <- seq(from = years_range[1], to = years_range[2], length.out = 100)
-  
-  # Evaluate the fd object for the country over its specific range of years
-  evaluated_curve <- eval.fd(years_to_evaluate_country, smoothed_fds[[country]])
-  
-  # Store the evaluated curve in a data frame format in the list
-  evaluated_curves[[country]] <- data.frame(Country = country,
-                                            Year = years_to_evaluate_country,
-                                            LogFertilityRate = evaluated_curve)
-}
+# Mean and standard deviation
 
-# Step 2: Combine the evaluated curves for all countries into a single data frame
-curves_df <- do.call(rbind, evaluated_curves)
+meanlogprec   = mean.fd(combined_fd)
+stddevlogprec = std.fd(combined_fd)
 
-# Add continent information to curves_df
-curves_df$Continent <- ifelse(curves_df$Country %in% largest_european_countries, "Europe", "Asia")
+lines(meanlogprec, lwd=4, lty=2, col=2)
+lines(stddevlogprec, lwd=4, lty=2, col=4)
 
-# Step 3: Plot using ggplot2
-ggplot(curves_df, aes(x = Year, y = LogFertilityRate, color = Continent, group = Country)) +
-  geom_line() +
-  scale_color_manual(values = c("Europe" = "blue", "Asia" = "red")) +
-  labs(title = "Smoothed Fertility Rates Over Time by Continent",
-       x = "Year",
-       y = "Log Fertility Rate",
-       color = "Continent") +
-  theme_minimal() +
-  theme(legend.position = "bottom")
+lines(meanlogprec-stddevlogprec, lwd=4, lty=2, col=6)
+lines(meanlogprec+stddevlogprec, lwd=4, lty=2, col=6)
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+# Boxplot
+boxplot(combined_fd)
 
