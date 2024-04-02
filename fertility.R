@@ -98,3 +98,23 @@ lines(meanlogprec+stddevlogprec, lwd=4, lty=2, col=6)
 # Boxplot
 boxplot(combined_fd)
 
+# PCA
+
+nharm = 4
+pcalist = pca.fd(combined_fd, nharm, centerfns = TRUE)
+plot(pcalist)
+plot(pcalist$harmonics)
+
+plotscores(pcalist, loc = 5)
+
+# Clustering
+library(funFEM)
+
+res_w <- funFEM(combined_fd, K=2)
+
+par(mfrow=c(1,2))
+plot(combined_fd, col=res_w$cls, lwd=2, lty=1)
+fdmeans_w <- combined_fd
+fdmeans_w$coefs <- t(res_w$prms$my)
+plot(fdmeans_w, col=1:max(res_w$cls), lwd=2)
+
