@@ -5,7 +5,7 @@ library(dplyr)
 library(tidyr)
 library(zoo)
 
-data <- read_excel("C:/Users/tucas/Downloads/undesa_pd_2019_world_fertility_dataset.xlsx", 
+data <- read_excel("C:/Users/Indre/Downloads/undesa_pd_2019_world_fertility_dataset.xlsx",
                    sheet = "FERTILITY INDICATORS", skip = 6)
 
 data <- data[, 1:6]
@@ -24,9 +24,9 @@ largest_european_countries <- c("Russian Federation", "Germany", "United Kingdom
                                 "Belgium", "Greece", "Czechia", "Portugal", "Sweden", "Hungary",
                                 "Belarus", "Austria", "Switzerland", "Serbia")
 
-largest_asian_countries <- c("China", "India", "Indonesia", "Pakistan", "Bangladesh", 
-                             "Japan", "Philippines", "Vietnam", "Iran", "Turkey", 
-                             "Thailand", "Myanmar", "South Korea", "Iraq", "Afghanistan", 
+largest_asian_countries <- c("China", "India", "Indonesia", "Pakistan", "Bangladesh",
+                             "Japan", "Philippines", "Vietnam", "Iran", "Turkey",
+                             "Thailand", "Myanmar", "South Korea", "Iraq", "Afghanistan",
                              "Saudi Arabia", "Uzbekistan", "Malaysia", "Yemen", "Nepal")
 
 country_data <- data_filtered %>%
@@ -37,11 +37,13 @@ final_data <- country_data %>%
   mutate(Continent = ifelse(`Country or Area` %in% largest_european_countries, "Europe", "Asia"))
 
 # Apply logarithmic transformation
-final_data$ValueLog = log(final_data$Value)
+final_data <- final_data %>%
+  mutate(ValueLog = log(Value))
 
+View(final_data)
 
 # Draw the graph
-ggplot(filtered_data, aes(x = Date, y = ValueLog, group = `Country or Area`, color = `Continent`)) +
+ggplot(final_data, aes(x = Date, y = ValueLog, group = `Country or Area`, color = `Continent`)) +
   geom_line() + # Draw lines for each country
   scale_color_manual(values = c("Europe" = "blue", "Asia" = "red")) + # Set colors for continents
   labs(title = "Fertility Rates Over Time by Continent",
@@ -57,32 +59,87 @@ ggplot(filtered_data, aes(x = Date, y = ValueLog, group = `Country or Area`, col
 range_of_dates <- range(final_data$Date)
 
 # Set up the B-spline basis object
-nbasis <-  5  # Can experiment, but this one seems to work the best
+nbasis <- 5  # Can experiment, but this one seems to work the best
 basis_obj <- create.bspline.basis(rangeval=range_of_dates, nbasis=nbasis, norder=4)
+
+lambda_v =1e2 # Lambda controls the smoothness
 
 # Initialize an empty list for storing fd objects for each country
 country_fds <- list()
 
+# Initialize empty lists for storing smoothed fd objects for European and Asian countries
+europe_fds <- list()
+asia_fds <- list()
+
+# Loop through unique countries and smooth the data
 for(country in unique(final_data$`Country or Area`)) {
   country_data <- subset(final_data, `Country or Area` == country)
-  
   argvals <- country_data$Date
   y <- country_data$ValueLog
-  
-  fdParObj <- fdPar(basis_obj, Lfdobj=int2Lfd(2), lambda=1e-6)  # Lambda controls the smoothness
+
+  # Smooth the data
+  fdParObj <- fdPar(basis_obj, Lfdobj=int2Lfd(2), lambda= lambda_v)
   smooth_res <- smooth.basis(argvals, y, fdParObj)
-  
-  # Store the fd object for each country
-  country_fds[[country]] <- smooth_res$fd
+
+  # Store the fd object based on continent
+  if (country %in% largest_european_countries) {
+    europe_fds[[country]] <- smooth_res$fd
+  } else {
+    asia_fds[[country]] <- smooth_res$fd
+  }
 }
 
-# Combine the coefficients from each fd object into a single matrix
-coefs <- do.call(cbind, lapply(country_fds, function(fd) fd$coefs))
+# Combine the coefficients from each fd object into a single matrix for Europe
+europe_coefs <- do.call(cbind, lapply(europe_fds, function(fd) fd$coefs))
+europe_basis_obj <- create.bspline.basis(rangeval=range_of_dates, nbasis=nbasis, norder=4)
+europe_fd <- fd(europe_coefs, europe_basis_obj)
 
-# Create a new fd object using the combined coefficients and the common basis object
-combined_fd <- fd(coefs, basis_obj)
+# Combine the coefficients from each fd object into a single matrix for Asia
+asia_coefs <- do.call(cbind, lapply(asia_fds, function(fd) fd$coefs))
+asia_basis_obj <- create.bspline.basis(rangeval=range_of_dates, nbasis=nbasis, norder=4)
+asia_fd <- fd(asia_coefs, asia_basis_obj)
 
+# Combine the coefficients from European and Asian fd objects
+combined_coefs <- cbind(europe_fd$coefs, asia_fd$coefs)
+
+# Use the same basis object for the combined fd object
+combined_fd <- fd(combined_coefs, basisobj = europe_fd$basisobj)
+
+# Plot the combined functional data object
 plot(combined_fd)
+
+# Calculate the covariance matrix for Asian country data
+covariance_matrix_asia <- cov(asia_coefs)
+
+# Plot the covariance surface
+persp(covariance_matrix_asia,  theta=-45, phi=25, r=3, expand = 0.5,
+      ticktype='detailed',
+      xlab = "Time", ylab = "Time", zlab = "Covariance",
+      main = "Covariance for Asian Country Data")
+
+# Plot the covariance surface in 2d for Asian country data
+contour(covariance_matrix_asia,
+        ticktype = 'detailed',
+        xlab = "Time", ylab = "Time",
+        main = "Covariance for European Country Data")
+
+
+# Calculate the covariance matrix for European country data
+covariance_matrix_europe <- cov(europe_coefs)
+
+# Plot the covariance surface
+persp(covariance_matrix_europe, theta = -45, phi = 25, r = 3, expand = 0.5,
+      ticktype = 'detailed',
+      xlab = "Time", ylab = "Time", zlab = "Covariance",
+      main = "Covariance for European Country Data")
+
+
+# Plot the covariance surface in 2d for European country data
+contour(covariance_matrix_europe,
+        xlab = "Time", ylab = "Time",
+        main = "Covariance for European Country Data")
+
+
 
 # Mean and standard deviation
 
@@ -97,4 +154,31 @@ lines(meanlogprec+stddevlogprec, lwd=4, lty=2, col=6)
 
 # Boxplot
 boxplot(combined_fd)
+
+# PCA
+
+nharm = 4
+pcalist = pca.fd(combined_fd, nharm, centerfns = TRUE)
+plot(pcalist)
+plot(pcalist$harmonics)
+
+plotscores(pcalist, loc = 5)
+
+#### Rotation
+varmx <- varmx.pca.fd(pcalist)
+plot(varmx)
+
+plot(varmx$harmonics)
+
+plotscores(varmx, loc = 5)
+# Clustering
+library(funFEM)
+
+res_w <- funFEM(combined_fd, K=2)
+
+par(mfrow=c(1,2))
+plot(combined_fd, col=res_w$cls, lwd=2, lty=1)
+fdmeans_w <- combined_fd
+fdmeans_w$coefs <- t(res_w$prms$my)
+plot(fdmeans_w, col=1:max(res_w$cls), lwd=2)
 
