@@ -177,6 +177,61 @@ plot(varmx$harmonics)
 
 plotscores(varmx, loc = 5)
 
+#BY CONTINENT
+# PCA asia
+
+nharm = 4
+pcalist = pca.fd(asia_fd, nharm, centerfns = TRUE)
+plot(pcalist)
+plot(pcalist$harmonics)
+
+plotscores(pcalist, loc = 5)
+
+
+#### Rotation asia
+varmx_as <- varmx.pca.fd(pcalist)
+plot(varmx_as)
+
+plot(varmx_as$harmonics)
+
+plotscores(varmx_as, loc = 5)
+
+nharm = 4
+pcalist = pca.fd(asia_fd, nharm, centerfns = TRUE)
+plot(pcalist)
+plot(pcalist$harmonics)
+
+plotscores(pcalist, loc = 5)
+
+
+# PCA europe
+
+nharm = 4
+pcalist = pca.fd(europe_fd, nharm, centerfns = TRUE)
+plot(pcalist)
+plot(pcalist$harmonics)
+
+plotscores(pcalist, loc = 5)
+
+
+#### Rotation europe
+varmx_eu <- varmx.pca.fd(pcalist)
+plot(varmx_eu)
+
+plot(varmx_eu$harmonics)
+
+plotscores(varmx_eu, loc = 5)
+
+nharm = 4
+pcalist = pca.fd(europe_fd, nharm, centerfns = TRUE)
+plot(pcalist)
+plot(pcalist$harmonics)
+
+plotscores(pcalist, loc = 5)
+
+
+
+
 # Clustering
 library(funFEM)
 
