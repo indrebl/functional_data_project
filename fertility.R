@@ -164,6 +164,7 @@ plot(pcalist$harmonics)
 
 plotscores(pcalist, loc = 5)
 
+
 #### Rotation
 varmx <- varmx.pca.fd(pcalist)
 plot(varmx)
@@ -171,6 +172,7 @@ plot(varmx)
 plot(varmx$harmonics)
 
 plotscores(varmx, loc = 5)
+
 # Clustering
 library(funFEM)
 
