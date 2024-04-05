@@ -108,6 +108,18 @@ combined_fd <- fd(combined_coefs, basisobj = europe_fd$basisobj)
 # Plot the combined functional data object
 plot(combined_fd)
 
+# Mean and standard deviation
+
+meanlogprec   = mean.fd(combined_fd)
+stddevlogprec = std.fd(combined_fd)
+
+lines(meanlogprec, lwd=4, lty=2, col=2)
+lines(stddevlogprec, lwd=4, lty=2, col=4)
+
+lines(meanlogprec-stddevlogprec, lwd=4, lty=2, col=6)
+lines(meanlogprec+stddevlogprec, lwd=4, lty=2, col=6)
+
+
 # Calculate the covariance matrix for Asian country data
 covariance_matrix_asia <- cov(asia_coefs)
 
@@ -141,19 +153,11 @@ contour(covariance_matrix_europe,
 
 
 
-# Mean and standard deviation
-
-meanlogprec   = mean.fd(combined_fd)
-stddevlogprec = std.fd(combined_fd)
-
-lines(meanlogprec, lwd=4, lty=2, col=2)
-lines(stddevlogprec, lwd=4, lty=2, col=4)
-
-lines(meanlogprec-stddevlogprec, lwd=4, lty=2, col=6)
-lines(meanlogprec+stddevlogprec, lwd=4, lty=2, col=6)
 
 # Boxplot
 boxplot(combined_fd)
+boxplot(asia_fd)
+boxplot(europe_fd)
 
 # PCA
 
