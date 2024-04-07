@@ -184,7 +184,7 @@ plotscores(varmx, loc = 5)
 
 nharm = 4
 pcalist = pca.fd(asia_fd, nharm, centerfns = TRUE)
-plot(pcalist)
+plot(pcalist, xlab="year")
 plot(pcalist$harmonics)
 
 plotscores(pcalist, loc = 5)
@@ -192,7 +192,7 @@ plotscores(pcalist, loc = 5)
 
 #### Rotation asia
 varmx_as <- varmx.pca.fd(pcalist)
-plot(varmx_as)
+plot(varmx_as, xlab="year")
 
 plot(varmx_as$harmonics)
 
@@ -204,7 +204,7 @@ plotscores(varmx_as, loc = 5)
 
 nharm = 4
 pcalist = pca.fd(europe_fd, nharm, centerfns = TRUE)
-plot(pcalist)
+plot(pcalist, xlab="year")
 plot(pcalist$harmonics)
 
 plotscores(pcalist, loc = 5)
@@ -212,7 +212,7 @@ plotscores(pcalist, loc = 5)
 
 #### Rotation europe
 varmx_eu <- varmx.pca.fd(pcalist)
-plot(varmx_eu)
+plot(varmx_eu, xlab="year")
 
 plot(varmx_eu$harmonics)
 
