@@ -198,12 +198,6 @@ plot(varmx_as$harmonics)
 
 plotscores(varmx_as, loc = 5)
 
-nharm = 4
-pcalist = pca.fd(asia_fd, nharm, centerfns = TRUE)
-plot(pcalist)
-plot(pcalist$harmonics)
-
-plotscores(pcalist, loc = 5)
 
 
 # PCA europe
@@ -224,12 +218,6 @@ plot(varmx_eu$harmonics)
 
 plotscores(varmx_eu, loc = 5)
 
-nharm = 4
-pcalist = pca.fd(europe_fd, nharm, centerfns = TRUE)
-plot(pcalist)
-plot(pcalist$harmonics)
-
-plotscores(pcalist, loc = 5)
 
 
 
