@@ -133,7 +133,7 @@ persp(covariance_matrix_asia,  theta=-45, phi=25, r=3, expand = 0.5,
 contour(covariance_matrix_asia,
         ticktype = 'detailed',
         xlab = "Time", ylab = "Time",
-        main = "Covariance for European Country Data")
+        main = "Covariance for Asian Country Data")
 
 
 # Calculate the covariance matrix for European country data
