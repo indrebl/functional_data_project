@@ -156,9 +156,11 @@ contour(covariance_matrix_europe,
 
 # Boxplot
 boxplot(combined_fd)
-boxplot(asia_fd)
-boxplot(europe_fd)
+boxplot(asia_fd, xlab = "year", ylab = "fertility", main = "Asian fertility")
+boxplot(europe_fd, xlab = "year", ylab = "fertility", main = "European fertility")
 
+outliers <- boxplot(asia_fd)$out
+print(outliers)
 # PCA
 
 nharm = 4
