@@ -202,7 +202,7 @@ plotscores(varmx_as, loc = 5)
 
 # PCA europe
 
-nharm = 4
+nharm = 5
 pcalist = pca.fd(europe_fd, nharm, centerfns = TRUE)
 plot(pcalist, xlab="year")
 plot(pcalist$harmonics)
