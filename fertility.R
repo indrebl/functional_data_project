@@ -219,17 +219,17 @@ plot(varmx_eu$harmonics)
 plotscores(varmx_eu, loc = 5)
 
 
+#### Hypothesis testing
 
+# First we will perform a two sample pointwise test
+# Reason: Compare the mean functions of europe and asia
+# H0: mu(europe) = mu(asia)
+# H1: mu(europe) != mu(asia)
 
+source("Ztwosample.R")
 
-# Clustering
-library(funFEM)
+t.sq <- seq(1950.001, 2018.501, by=1)
 
-res_w <- funFEM(combined_fd, K=2)
-
-par(mfrow=c(1,2))
-plot(combined_fd, col=res_w$cls, lwd=2, lty=1)
-fdmeans_w <- combined_fd
-fdmeans_w$coefs <- t(res_w$prms$my)
-plot(fdmeans_w, col=1:max(res_w$cls), lwd=2)
+stat <- Ztwosample(x=europe_fd, y=asia_fd, t.seq = t.sq)
+stat
 
