@@ -222,7 +222,7 @@ plotscores(varmx_eu, loc = 5)
 #### Hypothesis testing
 
 # First we will perform a two sample pointwise test
-# Reason: Compare the mean functions of europe and asia
+# Reason: Compare the pointwise mean functions of europe and asia
 # H0: mu(europe) = mu(asia)
 # H1: mu(europe) != mu(asia)
 
@@ -232,4 +232,35 @@ t.sq <- seq(1950.001, 2018.501, by=1)
 
 stat <- Ztwosample(x=europe_fd, y=asia_fd, t.seq = t.sq)
 stat
+
+
+# Secondly we will perform a two sample L2 statistic
+# Reason: Compare the mean functions of europe and asia
+# H0: mu(europe) = mu(asia)
+# H1: mu(europe) != mu(asia)
+
+stat <- L2.stat.twosample(x=europe_fd, y=asia_fd, t.seq = t.sq, method=1)
+stat
+stat <- L2.stat.twosample(x=europe_fd, y=asia_fd, t.seq = t.sq, method=2, replications=500)
+stat$pvalue
+stat
+
+
+# Finally we will perform a two sample F test
+# Reason: Compare the mean functions of europe and asia
+# H0: mu(europe) = mu(asia)
+# H1: mu(europe) != mu(asia)
+
+source("Fstattwosample.R")
+
+stat <- F.stat.twosample(x=europe_fd, y=asia_fd, t.seq = t.sq, method=1)
+stat
+stat <- F.stat.twosample(x=europe_fd, y=asia_fd, t.seq = t.sq, method=2, replications=500)
+stat$pvalue
+
+# Also a  two sample permutation test
+
+stat <- tperm.fd(europe_fd, asia_fd)
+stat
+
 
