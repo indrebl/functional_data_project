@@ -263,4 +263,85 @@ stat$pvalue
 stat <- tperm.fd(europe_fd, asia_fd)
 stat
 
+#### Time series forecasting
+library(ftsa)
+library(var)
+
+total_fertility_m <- eval.fd(t.sq, combined_fd, returnMatrix = TRUE)
+eu_fertility_m <- eval.fd(t.sq, europe_fd, returnMatrix = TRUE)
+as_fertility_m <- eval.fd(t.sq, asia_fd, returnMatrix = TRUE)
+
+tf <- fts(x = t.sq, y=total_fertility_m, yname = "TFR", xname = "Years")
+fboxplot(tf, type="hdr")
+euf <- fts(x = t.sq, y=eu_fertility_m, yname = "TFR", xname = "Years")
+fboxplot(euf, type="hdr")
+asf <- fts(x = t.sq, y=as_fertility_m, yname = "TFR", xname = "Years")
+fboxplot(asf, type="hdr")
+
+model1.ftsm <- ftsm(tf, order=2)
+summary(model1.ftsm)
+model2.ftsm <- ftsm(euf, order=2)
+summary(model2.ftsm)
+model3.ftsm <- ftsm(asf, order=2)
+summary(model3.ftsm)
+
+plot(model1.ftsm$coeff)
+plot(model2.ftsm$coeff)
+plot(model3.ftsm$coeff)
+
+matplot(model1.ftsm$basis, type="l")
+matplot(model1.ftsm$basis[,-1], type="l")
+
+matplot(model2.ftsm$basis, type="l")
+matplot(model2.ftsm$basis[,-1], type="l")
+
+matplot(model3.ftsm$basis, type="l")
+matplot(model3.ftsm$basis[,-1], type="l")
+
+model1.ftsm$varprop
+model2.ftsm$varprop
+model3.ftsm$varprop
+
+# Forecast
+oneStep <- predict(model1.ftsm, h=1)
+oneStep
+plot(oneStep$mean$y, type="l", ylab = "TFR", xlab = "Years", ylim = c(0,5))
+lines(oneStep$lower$y, col=2, lty=2)
+lines(oneStep$upper$y, col=2, lty=2)
+
+oneStep <- predict(model2.ftsm, h=1)
+oneStep
+plot(oneStep$mean$y, type="l", ylab = "TFR", xlab = "Years", ylim = c(0,5))
+lines(oneStep$lower$y, col=2, lty=2)
+lines(oneStep$upper$y, col=2, lty=2)
+
+oneStep <- predict(model3.ftsm, h=1)
+oneStep
+plot(oneStep$mean$y, type="l", ylab = "TFR", xlab = "Years", ylim = c(0,5))
+lines(oneStep$lower$y, col=2, lty=2)
+lines(oneStep$upper$y, col=2, lty=2)
+
+multistep <- predict(model1.ftsm, h=3)
+multistep
+multistep$mean$y
+multistep$lower$y
+multistep$upper$y
+
+multistep <- predict(model2.ftsm, h=3)
+multistep
+multistep$mean$y
+multistep$lower$y
+multistep$upper$y
+
+multistep <- predict(model3.ftsm, h=3)
+multistep
+multistep$mean$y
+multistep$lower$y
+multistep$upper$y
+
+# Stationarity
+T_stationary(tf$y)
+T_stationary(euf$y)
+T_stationary(asf$y)                                    
+
 
