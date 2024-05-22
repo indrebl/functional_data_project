@@ -280,7 +280,7 @@ fboxplot(asf, type="hdr")
 
 model1.ftsm <- ftsm(tf, order=2)
 summary(model1.ftsm)
-model2.ftsm <- ftsm(euf, order=2)
+model2.ftsm <- ftsm(euf, order=3)
 summary(model2.ftsm)
 model3.ftsm <- ftsm(asf, order=2)
 summary(model3.ftsm)
