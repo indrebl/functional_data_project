@@ -219,17 +219,129 @@ plot(varmx_eu$harmonics)
 plotscores(varmx_eu, loc = 5)
 
 
+#### Hypothesis testing
+
+# First we will perform a two sample pointwise test
+# Reason: Compare the pointwise mean functions of europe and asia
+# H0: mu(europe) = mu(asia)
+# H1: mu(europe) != mu(asia)
+
+source("Ztwosample.R")
+
+t.sq <- seq(1950.001, 2018.501, by=1)
+
+stat <- Ztwosample(x=europe_fd, y=asia_fd, t.seq = t.sq)
+stat
 
 
+# Secondly we will perform a two sample L2 statistic
+# Reason: Compare the mean functions of europe and asia
+# H0: mu(europe) = mu(asia)
+# H1: mu(europe) != mu(asia)
 
-# Clustering
-library(funFEM)
+stat <- L2.stat.twosample(x=europe_fd, y=asia_fd, t.seq = t.sq, method=1)
+stat
+stat <- L2.stat.twosample(x=europe_fd, y=asia_fd, t.seq = t.sq, method=2, replications=500)
+stat$pvalue
+stat
 
-res_w <- funFEM(combined_fd, K=2)
 
-par(mfrow=c(1,2))
-plot(combined_fd, col=res_w$cls, lwd=2, lty=1)
-fdmeans_w <- combined_fd
-fdmeans_w$coefs <- t(res_w$prms$my)
-plot(fdmeans_w, col=1:max(res_w$cls), lwd=2)
+# Finally we will perform a two sample F test
+# Reason: Compare the mean functions of europe and asia
+# H0: mu(europe) = mu(asia)
+# H1: mu(europe) != mu(asia)
+
+source("Fstattwosample.R")
+
+stat <- F.stat.twosample(x=europe_fd, y=asia_fd, t.seq = t.sq, method=1)
+stat
+stat <- F.stat.twosample(x=europe_fd, y=asia_fd, t.seq = t.sq, method=2, replications=500)
+stat$pvalue
+
+# Also a  two sample permutation test
+
+stat <- tperm.fd(europe_fd, asia_fd)
+stat
+
+#### Time series forecasting
+library(ftsa)
+library(var)
+
+total_fertility_m <- eval.fd(t.sq, combined_fd, returnMatrix = TRUE)
+eu_fertility_m <- eval.fd(t.sq, europe_fd, returnMatrix = TRUE)
+as_fertility_m <- eval.fd(t.sq, asia_fd, returnMatrix = TRUE)
+
+tf <- fts(x = t.sq, y=total_fertility_m, yname = "TFR", xname = "Years")
+fboxplot(tf, type="hdr")
+euf <- fts(x = t.sq, y=eu_fertility_m, yname = "TFR", xname = "Years")
+fboxplot(euf, type="hdr")
+asf <- fts(x = t.sq, y=as_fertility_m, yname = "TFR", xname = "Years")
+fboxplot(asf, type="hdr")
+
+model1.ftsm <- ftsm(tf, order=2)
+summary(model1.ftsm)
+model2.ftsm <- ftsm(euf, order=3)
+summary(model2.ftsm)
+model3.ftsm <- ftsm(asf, order=2)
+summary(model3.ftsm)
+
+plot(model1.ftsm$coeff)
+plot(model2.ftsm$coeff)
+plot(model3.ftsm$coeff)
+
+matplot(model1.ftsm$basis, type="l")
+matplot(model1.ftsm$basis[,-1], type="l")
+
+matplot(model2.ftsm$basis, type="l")
+matplot(model2.ftsm$basis[,-1], type="l")
+
+matplot(model3.ftsm$basis, type="l")
+matplot(model3.ftsm$basis[,-1], type="l")
+
+model1.ftsm$varprop
+model2.ftsm$varprop
+model3.ftsm$varprop
+
+# Forecast
+oneStep <- predict(model1.ftsm, h=1)
+oneStep
+plot(oneStep$mean$y, type="l", ylab = "TFR", xlab = "Years", ylim = c(0,5))
+lines(oneStep$lower$y, col=2, lty=2)
+lines(oneStep$upper$y, col=2, lty=2)
+
+oneStep <- predict(model2.ftsm, h=1)
+oneStep
+plot(oneStep$mean$y, type="l", ylab = "TFR", xlab = "Years", ylim = c(0,5))
+lines(oneStep$lower$y, col=2, lty=2)
+lines(oneStep$upper$y, col=2, lty=2)
+
+oneStep <- predict(model3.ftsm, h=1)
+oneStep
+plot(oneStep$mean$y, type="l", ylab = "TFR", xlab = "Years", ylim = c(0,5))
+lines(oneStep$lower$y, col=2, lty=2)
+lines(oneStep$upper$y, col=2, lty=2)
+
+multistep <- predict(model1.ftsm, h=3)
+multistep
+multistep$mean$y
+multistep$lower$y
+multistep$upper$y
+
+multistep <- predict(model2.ftsm, h=3)
+multistep
+multistep$mean$y
+multistep$lower$y
+multistep$upper$y
+
+multistep <- predict(model3.ftsm, h=3)
+multistep
+multistep$mean$y
+multistep$lower$y
+multistep$upper$y
+
+# Stationarity
+T_stationary(tf$y)
+T_stationary(euf$y)
+T_stationary(asf$y)                                    
+
 
