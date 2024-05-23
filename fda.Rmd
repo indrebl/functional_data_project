@@ -1,0 +1,131 @@
+---
+title: "World fertility analysis"
+author: "Indrė Blagnytė, Vismantas Tučas"
+date: "2024-05-23"
+output:
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(readxl)
+library(tidyverse)
+library(fda)
+library(dplyr)
+library(tidyr)
+library(zoo)
+
+data <- read_excel("C:/Users/Indre/Downloads/undesa_pd_2019_world_fertility_dataset.xlsx",
+                   sheet = "FERTILITY INDICATORS", skip = 6)
+
+data <- data[, 1:6]
+
+# Filter out rows where the fourth column (Indicators) contains "TFR"
+data_filtered <- filter(data, grepl("TFR", data[[4]]))
+
+# Also we filter out all the useless variables
+
+data_filtered <- data_filtered[, -c(2, 3, 4)]
+
+# Now we only take 20 largest European countries and 20 largest Asian countries
+
+largest_european_countries <- c("Russian Federation", "Germany", "United Kingdom", "France",
+                                "Italy", "Spain", "Ukraine", "Poland", "Romania", "Netherlands",
+                                "Belgium", "Greece", "Czechia", "Portugal", "Sweden", "Hungary",
+                                "Belarus", "Austria", "Switzerland", "Serbia")
+
+largest_asian_countries <- c("China", "India", "Indonesia", "Pakistan", "Bangladesh",
+                             "Japan", "Philippines", "Vietnam", "Iran", "Turkey",
+                             "Thailand", "Myanmar", "South Korea", "Iraq", "Afghanistan",
+                             "Saudi Arabia", "Uzbekistan", "Malaysia", "Yemen", "Nepal")
+
+country_data <- data_filtered %>%
+  filter(`Country or Area` %in% c(largest_european_countries, largest_asian_countries))
+
+# Add a new column for the continent
+final_data <- country_data %>%
+  mutate(Continent = ifelse(`Country or Area` %in% largest_european_countries, "Europe", "Asia"))
+
+```
+
+# Chosen data  
+
+For this project we chose to use [World Fertility Data 2019](https://www.un.org/development/desa/pd/data/world-fertility-data). The data set 
+consists of age specific fertility rates, total fertility and mean age of childbearing 
+for 201 countries or areas of the world and includes empirical data from civil registration systems, population censuses, and sample surveys that covers the time period from 1950 to 2019. 
+The reports were collected by the United Nations Department of Economic and Social Affairs.  
+
+We chose to analyze Total Fertility Rate trends in Europe's and Asia's largest countries from 1950 to 2019.
+Because of this we focused exclusively on Total Fertility Rates and limited the scope of the data to the largest countries by population in Europe and Asia to compare regional fertility trends (table 1).  
+
+Table 1. Countries chosen for the data analysis.  
+
+| **Chosen European countries** |       | **Chosen Asian countries** |       |
+|:------------------------------|:-----:|:---------------------------|:-----:|
+| Russia                        | Belgium | China                    | Thailand  |
+| Germany                       | Greece  | India                    | Myanmar   |
+| United Kingdom                | Czechia | Indonesia                | South Korea|
+| France                        | Portugal| Pakistan                 | Iraq      |
+| Italy                         | Sweden  | Bangladesh               | Afghanistan|
+| Spain                         | Hungary | Japan                    | Saudi Arabia|
+| Ukraine                       | Belarus | Philippines              | Uzbekistan|
+| Poland                        | Austria | Vietnam                  | Malaysia  |
+| Romania                       | Switzerland| Iran                  | Yemen     |
+| Netherlands                   | Serbia  | Turkey                   | Nepal     |
+
+The total fertility rate (TF) is calculated using the following formula:
+
+$$
+TF = \frac{5}{1000} \times \sum_{a=15-19}^{45-49} f_a
+$$
+
+Where \( f_a \) is age-specific fertility expressed in births per 1000 women.  
+Total fertility describes the mean number of children a woman would have by age 50 if she survived to age 50 and was subject, throughout her life, to the age-specific fertility rates observed in a given year. The measure is expressed as the number of children per woman.  
+
+# Data processing  
+
+We plotted the raw unsmoothed data (Fig. 1). Every line in the plot represents the fertility rates
+ of a single country.  
+
+``` {r Fig1, fig.cap= "Unsmoothed data."}
+# Draw the graph
+ggplot(final_data, aes(x = Date, y = Value, group = `Country or Area`, color = `Continent`)) +
+  geom_line() + # Draw lines for each country
+  scale_color_manual(values = c("Europe" = "blue", "Asia" = "red")) + # Set colors for continents
+  labs(title = "Fertility Rates Over Time by Continent",
+       x = "Date",
+       y = "Fertility Rate",
+       color = "Continent") +
+  theme_minimal() + # Use a minimal theme
+  theme(legend.position = "bottom") # Adjust legend position
+```  
+
+Because there was a lot of visible noise in the Asian countries' data, we chose to 
+perform a logarithmic transformation (Fig. 2).  
+
+``` {r, echo = FALSE, fig.cap="Fertility data after logarithmic transformation."}
+final_data <- final_data %>%
+  mutate(ValueLog = log(Value))
+
+View(final_data)
+
+# Draw the graph
+ggplot(final_data, aes(x = Date, y = ValueLog, group = `Country or Area`, color = `Continent`)) +
+  geom_line() + # Draw lines for each country
+  scale_color_manual(values = c("Europe" = "blue", "Asia" = "red")) + # Set colors for continents
+  labs(title = "Fertility Rates Over Time by Continent",
+       x = "Date",
+       y = "Fertility Rate",
+       color = "Continent") +
+  theme_minimal() + # Use a minimal theme
+  theme(legend.position = "bottom") # Adjust legend position
+```  
+
+# Smoothing  
+
+Due to the nature of our data, the B-Spline basis smoothing method was chosen. After 
+experimenting with different smothing parameters, we decided on: number of Basis 
+Functions (Nbasis) = 5, order of Basis Functions (Norder) = 4, smoothing Penalty 
+(Lambda) = \(1 \times 10^2\)
+
