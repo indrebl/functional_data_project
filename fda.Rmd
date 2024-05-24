@@ -129,3 +129,136 @@ experimenting with different smothing parameters, we decided on: number of Basis
 Functions (Nbasis) = 5, order of Basis Functions (Norder) = 4, smoothing Penalty 
 (Lambda) = \(1 \times 10^2\)
 
+```{r, echo = FALSE}
+# Get the range of years
+range_of_dates <- range(final_data$Date)
+
+# Set up the B-spline basis object
+nbasis <- 5  # Can experiment, but this one seems to work the best
+basis_obj <- create.bspline.basis(rangeval=range_of_dates, nbasis=nbasis, norder=4)
+
+lambda_v =1e2 # Lambda controls the smoothness
+
+# Initialize an empty list for storing fd objects for each country
+country_fds <- list()
+
+# Initialize empty lists for storing smoothed fd objects for European and Asian countries
+europe_fds <- list()
+asia_fds <- list()
+
+# Loop through unique countries and smooth the data
+for(country in unique(final_data$`Country or Area`)) {
+  country_data <- subset(final_data, `Country or Area` == country)
+  argvals <- country_data$Date
+  y <- country_data$ValueLog
+
+  # Smooth the data
+  fdParObj <- fdPar(basis_obj, Lfdobj=int2Lfd(2), lambda= lambda_v)
+  smooth_res <- smooth.basis(argvals, y, fdParObj)
+
+  # Store the fd object based on continent
+  if (country %in% largest_european_countries) {
+    europe_fds[[country]] <- smooth_res$fd
+  } else {
+    asia_fds[[country]] <- smooth_res$fd
+  }
+}
+
+# Combine the coefficients from each fd object into a single matrix for Europe
+europe_coefs <- do.call(cbind, lapply(europe_fds, function(fd) fd$coefs))
+europe_basis_obj <- create.bspline.basis(rangeval=range_of_dates, nbasis=nbasis, norder=4)
+europe_fd <- fd(europe_coefs, europe_basis_obj)
+
+# Combine the coefficients from each fd object into a single matrix for Asia
+asia_coefs <- do.call(cbind, lapply(asia_fds, function(fd) fd$coefs))
+asia_basis_obj <- create.bspline.basis(rangeval=range_of_dates, nbasis=nbasis, norder=4)
+asia_fd <- fd(asia_coefs, asia_basis_obj)
+
+# Correctly set the range for the combined FD creation
+combined_basis_obj <- create.bspline.basis(rangeval=range_of_dates, nbasis=nbasis, norder=4)
+
+# Combine the coefficients from European and Asian fd objects
+combined_coefs <- cbind(europe_fd$coefs, asia_fd$coefs)
+
+# Use the new, correctly ranged basis object for the combined fd object
+combined_fd <- fd(combined_coefs, basisobj = combined_basis_obj)
+
+# Plot the combined functional data object
+plot(combined_fd)
+```
+
+# Mean and Standard Deviation
+
+For the smoothed data, we calculated the mean function (red dotted line), standard deviation (blue dotted line) and the mean function +- the standard deviation (both purple dotted lines). The red line shows the mean central tendency of all the countries in our dataset, which signifies a downward trend. The blue line shows the variability and dispersion of each countries curves, it seems that in the beginning the data is more spread out, but as years go on, the variability becomes smaller, but towards the year 2005 becomes more variable. Given the purple lines, some countries exceed the the mean function + standard deciation threshold, showing increased variability and uncertainty.
+
+```{r, echo = FALSE}
+plot(combined_fd)
+meanlogprec   = mean.fd(combined_fd)
+stddevlogprec = std.fd(combined_fd)
+
+lines(meanlogprec, lwd=4, lty=2, col=2)
+lines(stddevlogprec, lwd=4, lty=2, col=4)
+
+lines(meanlogprec-stddevlogprec, lwd=4, lty=2, col=6)
+lines(meanlogprec+stddevlogprec, lwd=4, lty=2, col=6)
+```
+
+# 2D and 3D covariance surface plot for Asian country data
+
+We then plotted seperate covariance surface plots both for Asian and European countries separatly to provide more insights in their own respective groups. For Asian data, in both of the covariance surface plots we can see that in the beginning the covariance values of these countries are quite variable, meaning the total fertility rates are not correlated strongly, however, towards the end we can see a peak, signifying a large covariance value, meaning the countries' total fertility rates tend to increase and decrease together.
+
+```{r, echo = FALSE}
+# Calculate the covariance matrix for Asian country data
+covariance_matrix_asia <- cov(asia_coefs)
+
+# Plot the 3D covariance surface
+persp(covariance_matrix_asia,  theta=-45, phi=25, r=3, expand = 0.5,
+      ticktype='detailed',
+      xlab = "Time", ylab = "Time", zlab = "Covariance",
+      main = "3D Covariance for Asian Country Data")
+
+# Plot the covariance surface in 2d for Asian country data
+contour(covariance_matrix_asia,
+        ticktype = 'detailed',
+        xlab = "Time", ylab = "Time",
+        main = "2D Covariance for Asian Country Data")
+```
+
+# 2D and 3D covariance surface plot for European country data
+
+Unlike the Asian data, which had a clear peak suggesting a strong correlation in a particular time period, the European data seems to have multiple peaks and valleys, suggesting more complex and variable relationships over time, also it shows quite low covariance values all across the board, further indicating their complex nature.
+
+```{r, echo = FALSE}
+# Calculate the covariance matrix for European country data
+covariance_matrix_europe <- cov(europe_coefs)
+
+# Plot the 3D covariance surface
+persp(covariance_matrix_europe, theta = -45, phi = 25, r = 3, expand = 0.5,
+      ticktype = 'detailed',
+      xlab = "Time", ylab = "Time", zlab = "Covariance",
+      main = "Covariance for European Country Data")
+
+
+# Plot the covariance surface in 2d for European country data
+contour(covariance_matrix_europe,
+        xlab = "Time", ylab = "Time",
+        main = "Covariance for European Country Data")
+```
+
+# Boxplots
+
+Boxplots were plotted for the combined country data, asian country data and european country data separatly. The combined country boxplot indicates no outliers and an obvious downward trend, with a few countries somewhere around 2011 experiencing an increase in fertility rates. 
+
+The asian country boxplots shows a similar trend with less variability, which is natural, however there are two outliers. The upper outlier is Saudi Arabia and the lower outlier being Japan. Saudi Arabia was a rural country, however became very wealthy after oil discovery, which would affect their populations educational level as well as enabled access to planned parenthood, which explains the fertility rates going down. Japan, however, was and still is a lower outlier due to their demographic situation, they have the largest proportion of senior citizens in the world and are very career driven, thus creating a family is not a priority.
+
+The european country boxplot seems to show a severe downtrend in fertility without any outliers, however in 2005 started to gain momentum for an upward trend. 
+
+```{r, echo = FALSE}
+boxplot(combined_fd, xlab = "year", ylab = "fertility", main = "Combined fertility")
+boxplot(asia_fd, xlab = "year", ylab = "fertility", main = "Asian fertility")
+boxplot(europe_fd, xlab = "year", ylab = "fertility", main = "European fertility")
+
+outliers <- boxplot(asia_fd)$out
+print(outliers)
+```
+
