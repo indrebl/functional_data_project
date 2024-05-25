@@ -15,8 +15,9 @@ library(fda)
 library(dplyr)
 library(tidyr)
 library(zoo)
+library(ftsa)
 
-data <- read_excel("C:/Users/Indre/Downloads/undesa_pd_2019_world_fertility_dataset.xlsx",
+data <- read_excel("C:/Users/tucas/Downloads/undesa_pd_2019_world_fertility_dataset.xlsx",
                    sheet = "FERTILITY INDICATORS", skip = 6)
 
 data <- data[, 1:6]
@@ -104,7 +105,7 @@ ggplot(final_data, aes(x = Date, y = Value, group = `Country or Area`, color = `
 Because there was a lot of visible noise in the Asian countries' data, we chose to 
 perform a logarithmic transformation (Fig. 2).  
 
-``` {r, echo = FALSE, fig.cap="Fertility data after logarithmic transformation."}
+``` {r, echo = TRUE, fig.cap="Fertility data after logarithmic transformation."}
 final_data <- final_data %>%
   mutate(ValueLog = log(Value))
 
@@ -129,7 +130,7 @@ experimenting with different smothing parameters, we decided on: number of Basis
 Functions (Nbasis) = 5, order of Basis Functions (Norder) = 4, smoothing Penalty 
 (Lambda) = \(1 \times 10^2\)
 
-```{r, echo = FALSE}
+```{r, echo = TRUE}
 # Get the range of years
 range_of_dates <- range(final_data$Date)
 
@@ -191,7 +192,7 @@ plot(combined_fd)
 
 For the smoothed data, we calculated the mean function (red dotted line), standard deviation (blue dotted line) and the mean function +- the standard deviation (both purple dotted lines). The red line shows the mean central tendency of all the countries in our dataset, which signifies a downward trend. The blue line shows the variability and dispersion of each countries curves, it seems that in the beginning the data is more spread out, but as years go on, the variability becomes smaller, but towards the year 2005 becomes more variable. Given the purple lines, some countries exceed the the mean function + standard deciation threshold, showing increased variability and uncertainty.
 
-```{r, echo = FALSE}
+```{r, echo = TRUE}
 plot(combined_fd)
 meanlogprec   = mean.fd(combined_fd)
 stddevlogprec = std.fd(combined_fd)
@@ -207,7 +208,7 @@ lines(meanlogprec+stddevlogprec, lwd=4, lty=2, col=6)
 
 We then plotted seperate covariance surface plots both for Asian and European countries separatly to provide more insights in their own respective groups. For Asian data, in both of the covariance surface plots we can see that in the beginning the covariance values of these countries are quite variable, meaning the total fertility rates are not correlated strongly, however, towards the end we can see a peak, signifying a large covariance value, meaning the countries' total fertility rates tend to increase and decrease together.
 
-```{r, echo = FALSE}
+```{r, echo = TRUE}
 # Calculate the covariance matrix for Asian country data
 covariance_matrix_asia <- cov(asia_coefs)
 
@@ -228,7 +229,7 @@ contour(covariance_matrix_asia,
 
 Unlike the Asian data, which had a clear peak suggesting a strong correlation in a particular time period, the European data seems to have multiple peaks and valleys, suggesting more complex and variable relationships over time, also it shows quite low covariance values all across the board, further indicating their complex nature.
 
-```{r, echo = FALSE}
+```{r, echo = TRUE}
 # Calculate the covariance matrix for European country data
 covariance_matrix_europe <- cov(europe_coefs)
 
@@ -253,7 +254,7 @@ The asian country boxplots shows a similar trend with less variability, which is
 
 The european country boxplot seems to show a severe downtrend in fertility without any outliers, however in 2005 started to gain momentum for an upward trend. 
 
-```{r, echo = FALSE}
+```{r, echo = TRUE}
 boxplot(combined_fd, xlab = "year", ylab = "fertility", main = "Combined fertility")
 boxplot(asia_fd, xlab = "year", ylab = "fertility", main = "Asian fertility")
 boxplot(europe_fd, xlab = "year", ylab = "fertility", main = "European fertility")
@@ -262,3 +263,457 @@ outliers <- boxplot(asia_fd)$out
 print(outliers)
 ```
 
+# Functional PCA for combined country data
+
+For the combined country dataset we used a total of 4 principal components (harmonics), which account for 98.4% of variability. The first PCA function explains the most variability (91.7%). The is a general downward trend, gaining a upward momentum somewhere around the year 2011 in all PCA mean functions, with different variability.
+
+
+```{r, echo = TRUE}
+# PCA for combined country dataset
+nharm = 4
+pcalist = pca.fd(combined_fd, nharm, centerfns = TRUE)
+plot(pcalist, xlab = "year")
+```
+
+Applying varimax rotation to the functional PCA's, it is noticable that the first 3 functions explain the most variability in the dataset. The most variation can be seen in 3 distinct time periods, that is 1965, 1982, 2010, as indicated in first 3 PCA's.
+
+```{r, echo = TRUE}
+# Rotation for combined country dataset
+varmx <- varmx.pca.fd(pcalist)
+plot(varmx)
+```
+
+# Functional PCA for asian country data
+
+For the asian country data we also used a total of 4 principal components, which explain 99.3% of the variability. The most variability is explained by the first PCA. The first PCA shows similar results as the combined dataset, a clear downward trend with generally stable variability, becoming slightly smaller somewhere around 2010.
+
+``` {r, echo = TRUE}
+# PCA for asian country dataset
+nharm = 4
+pcalist = pca.fd(asia_fd, nharm, centerfns = TRUE)
+plot(pcalist, xlab="year")
+```
+
+When applying the varimax rotation, the first two PCA's explain the most variability, showing the most variability during the 1990 and 2000 period as well as the year 1965, as well as slightly more variability around 2019 and 1950. 
+
+```{r, echo = TRUE}
+# Rotation for asian data
+varmx_as <- varmx.pca.fd(pcalist)
+plot(varmx_as, xlab="year")
+```
+
+# Functional PCA for european country data
+
+For european data, a total of 5 functional PCA's were calculated, which account for >99.9% of the variation. The mean function for european countries is declining more than asian countries. The most significant portions of variability were captued by the first 3 PCA's. The highest peaks of variation are seen at the beginning of data callection, around 1950, the variability then greatly declines and remains qutie steady with minor fluctuations, however an another peak in variability can be seen around 2008, which are captured by the 3 most major PCA's.
+
+
+```{r, echo = TRUE}
+# PCA for european data
+nharm = 5
+pcalist = pca.fd(europe_fd, nharm, centerfns = TRUE)
+plot(pcalist, xlab="year")
+```
+
+Performing verimax rotation did not provide clearer insights.
+
+```{r, echo = TRUE}
+# Rotation for european data
+varmx_eu <- varmx.pca.fd(pcalist)
+plot(varmx_eu, xlab="year")
+```
+
+# Hypothesis testing
+# Two sample pointwise Z test
+
+First we will perform a two sample pointwise Z test to compare the pointwise mean functions of europe and asia, thus this hyptohtesis was proposed:
+
+H0: mu(europe) = mu(asia)
+H1: mu(europe) != mu(asia)
+
+There was a statistically significant difference between Europe’s and Asia’s mean fertility throughout the whole reported period. With Europe always showing a lower mean fertility compared to Asia. The difference is increases until the 1970’s when the difference is largest and has been shrinking since. The shrinking difference between Europe’s and Asia’s rates could be the result of the growing economy and better living conditions in Asia leading to lower birth rates.
+
+Critical value 2.100922
+```{r, echo = FALSE}
+# Two samples pointwise t-test
+
+Ztwosample <- function(x, y, t.seq, alpha=0.05) {
+  if(class(x) != "fd") stop("X must be fd object")
+  if(class(y) != "fd") stop("Y must be fd object")
+  k <- length(t.seq)
+  
+  mu.x <- mean.fd(x)
+  mu.y <- mean.fd(y)
+  
+  n <- dim(x$coef)[2]
+  m <- dim(x$coef)[2]
+  
+  delta <- (mu.x - mu.y)
+  delta.t <- eval.fd(t.seq, delta)
+  
+  z.x <- center.fd(x)
+  z.y <- center.fd(y)
+  
+  z.x.t <- eval.fd(t.seq, z.x)
+  z.y.t <- eval.fd(t.seq, z.y)
+  z.t <- cbind(z.x.t, z.y.t)
+  
+  if(n > k) {
+    Sigma <- (t(z.t) %*% z.t)/(n-2)
+  } else {
+    Sigma <- (z.t %*% t(z.t))/(n-2)
+  }
+  
+  gamma.t <- diag(Sigma)
+  Zpointwise <- sqrt((n*m)/(n+m)) * delta.t/sqrt(gamma.t)
+
+    crit <- qt(1-alpha/2, n-2)
+    crit.val <- rep(crit, k)
+    params <- list(critical.value = crit)
+
+  
+  mx <- max(cbind(Zpointwise, crit.val))
+  mn <- min(cbind(Zpointwise, -crit.val))
+  
+  plot(t.seq, Zpointwise, type="l", xlab = 'Time', ylab = "Z statistics",
+       main = "Two samples t-test", ylim=c(mn-0.5, mx+0.5))
+  lines(t.seq, crit.val, lty=2, lwd=2, col="blue")
+  lines(t.seq, -crit.val, lty=2, lwd=2, col="blue")
+  
+  
+  return(list(statistics.pointwise = Zpointwise,
+              params = params))
+}
+```
+
+```{r, echo = TRUE}
+t.sq <- seq(1950.001, 2018.501, by=1)
+
+stat <- Ztwosample(x=europe_fd, y=asia_fd, t.seq = t.sq)
+stat
+```
+
+# Two sample permutation test
+
+To confirm, we also did a two sample permutation test, two sample L2 statistic and two sample F-statistic for the same hypothesis.
+
+The two sample permutation test shows the same tendency as the Z-test.
+
+P-value was close to 0 (<0.05) - statistically significant difference between
+the two groups
+
+Critical value 2.365367
+
+```{r, echo = TRUE}
+# Also a  two sample permutation test
+stat <- tperm.fd(europe_fd, asia_fd)
+# Print only the p-value, q-value, and observed statistic
+list(p_value = stat$pval, q_value = stat$qval, T_obs = stat$Tobs)
+```
+
+# Two sample L2 statistic
+
+Performed both naive and bootstrap methods
+
+In both cases p-value was close to 0 (<0.05)
+
+Statistically significant difference between the two groups
+
+```{r, echo = FALSE}
+# # Two sample L2 norma based bootstrap test
+
+L2.stat.twosample <- function(x, y, t.seq, alpha=0.05, method=1:2, replications=100) {
+  # method = 1: T stat
+  # method = 2: Bootsrap
+  if(class(x) != "fd") stop("X must be fd object")
+  if(class(y) != "fd") stop("Y must be fd object")
+  
+  mu.x <- mean.fd(x)
+  mu.y <- mean.fd(y)
+  
+  n <- dim(x$coefs)[2]
+  m <- dim(y$coefs)[2]
+  
+  k <- length(t.seq)
+  
+  cn <- (n*m)/(n+m)
+  delta <- (mu.x - mu.y)
+  delta.t <- eval.fd(t.seq, delta)
+  
+  z.x <- center.fd(x)
+  z.y <- center.fd(y)
+  
+  z.x.t <- eval.fd(t.seq, z.x)
+  z.y.t <- eval.fd(t.seq, z.y)
+  z.t <- cbind(z.x.t, z.y.t)
+  
+  if(n > k | m > k) {
+    Sigma <- (t(z.t) %*% z.t)/(n-2)
+  } else {
+    Sigma <- (z.t %*% t(z.t))/(n-2)
+  }
+  
+  A <- sum(diag(Sigma))
+  B <- sum(diag(Sigma^2))
+  
+  L2stat <- cn * t(delta.t) %*% delta.t
+  L2stat <- L2stat[1]
+  
+  btL2stat <-  numeric(replications)
+  
+  if(method == 1) { #naive method
+    A2 <- A^2
+    B2 <- B
+    alp <- B2/A
+    df <- A2/B2
+    pvalue <- 1-pchisq(L2stat/alp, df)
+    params <- list(alpha = alp, df = df)
+  } 
+  if(method == 2) {  #bootstrapping method
+    for(i in 1:replications) {
+      rep1 <- sample(1:n, n, replace = TRUE)
+      xstar.coefs <- x$coefs[,rep1]
+      xstar.names <- x$fdnames
+      xstar.names$reps <- rep1
+      xstar.fd <- fd(xstar.coefs, x$basis, xstar.names)
+      
+      rep2 <- sample(1:m, m, replace = TRUE)
+      ystar.coefs <- y$coefs[,rep2]
+      ystar.names <- y$fdnames
+      ystar.names$reps <- rep2
+      ystar.fd <- fd(ystar.coefs, y$basis, ystar.names)
+      
+      mu.x.star <- mean.fd(xstar.fd)
+      mu.y.star <- mean.fd(ystar.fd)
+      delta.star <- (mu.x.star - mu.y.star)
+      delta.star.t <- eval.fd(t.seq, delta.star)
+
+      btmu <- apply(delta.star.t,1,mean) - delta.t
+      btL2stat[i] <- cn * t(btmu) %*% btmu
+    }
+    pvalue <- mean(btL2stat>=L2stat)
+    params <- list(boot.stat=btL2stat)
+  }
+  return(list(statistics = L2stat, pvalue = pvalue, params=params))
+}
+```
+
+```{r, echo = TRUE}
+stat <- L2.stat.twosample(x=europe_fd, y=asia_fd, t.seq = t.sq, method=1)
+stat
+stat <- L2.stat.twosample(x=europe_fd, y=asia_fd, t.seq = t.sq, method=2, replications=500)
+stat$pvalue
+stat
+```
+
+# Two sample F-statistic
+
+Performed both naive and bootstrap methods
+
+In both cases p-value was close to 0 (<0.05)
+
+Statistically significant difference between the two groups
+
+```{r, echo = FALSE}
+# # Two sample F type bootstrap test
+
+F.stat.twosample <- function(x, y, t.seq, alpha=0.05, method=1:2, replications=100) {
+  # method = 1: T stat
+  # method = 2: Bootsrap
+  if(class(x) != "fd") stop("X must be fd object")
+  if(class(y) != "fd") stop("Y must be fd object")
+  
+  mu.x <- mean.fd(x)
+  mu.y <- mean.fd(y)
+  
+  n <- dim(x$coefs)[2]
+  m <- dim(y$coefs)[2]
+  
+  k <- length(t.seq)
+  
+  cn <- (n*m)/(n+m)
+  delta <- (mu.x - mu.y)
+  delta.t <- eval.fd(t.seq, delta)
+  
+  z.x <- center.fd(x)
+  z.y <- center.fd(y)
+  
+  z.x.t <- eval.fd(t.seq, z.x)
+  z.y.t <- eval.fd(t.seq, z.y)
+  z.t <- cbind(z.x.t, z.y.t)
+  
+  if(n > k | m > k) {
+    Sigma <- (t(z.t) %*% z.t)/(n-2)
+  } else {
+    Sigma <- (z.t %*% t(z.t))/(n-2)
+  }
+  
+  A <- sum(diag(Sigma))
+  B <- sum(diag(Sigma^2))
+  
+  Fstat <- (cn * t(delta.t) %*% delta.t)/A
+  Fstat <- Fstat[1]
+  
+  btFstat <-  numeric(replications)
+  
+  if(method == 1) { #naive method
+    kappa <- A^2/B
+    pvalue <- 1-pf(Fstat, kappa, (n-2)*kappa)
+    params <- list(df1 = kappa, df2 = (n-2)*kappa)
+  } 
+  if(method == 2) {  #bootstrapping method
+    for(i in 1:replications) {
+      rep1 <- sample(1:n, n, replace = TRUE)
+      xstar.coefs <- x$coefs[,rep1]
+      xstar.names <- x$fdnames
+      xstar.names$reps <- rep1
+      xstar.fd <- fd(xstar.coefs, x$basis, xstar.names)
+      
+      rep2 <- sample(1:m, m, replace = TRUE)
+      ystar.coefs <- y$coefs[,rep2]
+      ystar.names <- y$fdnames
+      ystar.names$reps <- rep2
+      ystar.fd <- fd(ystar.coefs, y$basis, ystar.names)
+      
+      mu.x.star <- mean.fd(xstar.fd)
+      mu.y.star <- mean.fd(ystar.fd)
+      delta.star <- (mu.x.star - mu.y.star)
+      delta.star.t <- eval.fd(t.seq, delta.star)
+      
+      bt.z.x <- center.fd(xstar.fd)
+      bt.z.y <- center.fd(ystar.fd)
+      
+      bt.z.x.t <- eval.fd(t.seq, bt.z.x)
+      bt.z.y.t <- eval.fd(t.seq, bt.z.y)
+      z.star.t <- cbind(bt.z.x.t, bt.z.y.t)
+      
+      if(n > k | m > k) {
+        btSigma <- (t(z.star.t) %*% z.star.t)/(n-2)
+      } else {
+        btSigma <- (z.star.t %*% t(z.star.t))/(n-2)
+      }
+      
+      btmu <- apply(delta.star.t,1,mean) - delta.t
+      btFstat[i] <- (cn * t(btmu) %*% btmu)/sum(diag(btSigma))
+    }
+    pvalue <- mean(btFstat>=Fstat)
+    params <- list(btFstat)
+  }
+  return(list(statistics = Fstat, pvalue = pvalue, params=params))
+}
+
+```
+
+```{r, echo = TRUE}
+stat <- F.stat.twosample(x=europe_fd, y=asia_fd, t.seq = t.sq, method=1)
+stat
+stat <- F.stat.twosample(x=europe_fd, y=asia_fd, t.seq = t.sq, method=2, replications=500)
+stat$pvalue
+```
+
+# Timeseries modelling and forecasting
+
+Due to the nature of our data, we decided to perform timeseries modelling and forecasting. After creating functional timeseries object, we fitted them to separate models - combined, asian and european data. Their coefficients were visualized.
+
+In the combined data plot, we can see that the beta1 and beta2 coefficients are quite stable for about 20 years, after that it becomes much more variable, beta 1 (first PCA) being more severly variated, possibly due to asian country data.
+
+In the european data plot, we can see that beta1, beta2 and beta3 are a little bit varied, but not as much as the combined data plot.
+
+In the asian data plot, beta1 and beta2 are both strongly fluctuated, indicating more variability all across the board.
+
+```{r, echo = TRUE}
+# Get the matrix of combined, european and asian functional data
+total_fertility_m <- eval.fd(t.sq, combined_fd, returnMatrix = TRUE)
+eu_fertility_m <- eval.fd(t.sq, europe_fd, returnMatrix = TRUE)
+as_fertility_m <- eval.fd(t.sq, asia_fd, returnMatrix = TRUE)
+
+# Create functional timeseries objects
+tf <- fts(x = t.sq, y=total_fertility_m, yname = "TFR", xname = "Years")
+euf <- fts(x = t.sq, y=eu_fertility_m, yname = "TFR", xname = "Years")
+asf <- fts(x = t.sq, y=as_fertility_m, yname = "TFR", xname = "Years")
+
+# Create functional timeseries modelling with the most major PCA's
+model1.ftsm <- ftsm(tf, order=2)
+summary(model1.ftsm)
+model2.ftsm <- ftsm(euf, order=3)
+summary(model2.ftsm)
+model3.ftsm <- ftsm(asf, order=2)
+summary(model3.ftsm)
+
+plot(model1.ftsm$coeff)
+plot(model2.ftsm$coeff)
+plot(model3.ftsm$coeff)
+```
+
+Then, we inspected the basis matrices of all the 3 models to further inspect the variability captured by the PCA's.
+
+The first model for the combined country data shows that the general mean function, indicated by the black line, exhibits a declining trend. The dotted red line, representing Phi1, appears relatively flat across the dataset. However, it is crucial to note that Phi1 captures approximately 91.83% of the dataset's variability, indicating its significant but subtle influence. The green line, Phi2, while only accounting for about 5.41% of the variability, shows minor fluctuations, particularly noticeable after year 20. These fluctuations, though small, highlight additional patterns or deviations not encompassed by Phi1
+
+The second model for European country data exhibits a mean function that continues the declining trend observed in the combined country model. Unlike the combined model, all three principal components in this European dataset display noticeable fluctuations, with each component significantly contributing to the data's variability. The variance proportions for these components are 38.76% for the first PCA, 31.97% for the second PCA, and 20.06% for the third PCA. Contrary to the initial observation, the first PCA, not the third, captures the most variability, though all components show significant variance indicating diverse underlying patterns or influences. The third PCA, while the least in terms of variance explained compared to the first two, still shows substantial variability, reflecting more complex dynamics or interactions within the European data set.
+
+The third model for Asian countries displays a consistent declining mean function. Contrary to initial observations, the first principal component (PCA) significantly shapes the dataset, explaining 82% of the variability. The second PCA, accounting for 13.46% of the variance, exhibits notable fluctuations around year 20, highlighting additional, nuanced dynamics not captured by the first PCA.
+
+```{r, echo = TRUE}
+matplot(model1.ftsm$basis, type="l")
+matplot(model1.ftsm$basis[,-1], type="l")
+
+matplot(model2.ftsm$basis, type="l")
+matplot(model2.ftsm$basis[,-1], type="l")
+
+matplot(model3.ftsm$basis, type="l")
+matplot(model3.ftsm$basis[,-1], type="l")
+
+model1.ftsm$varprop
+model2.ftsm$varprop
+model3.ftsm$varprop
+```
+
+# Functional timeseries forecasting
+
+We extended our time series modeling by performing multistep forecasts using functional time series models developed from combined, European, and Asian datasets. The models predict future values by leveraging historical trends captured in the data.
+
+Forecasts were generated in a matrix format, with each row representing a base year and each column a future forecast period. For instance, a forecast for the 38th period based on the base year 1950 predicts a value of 2.6, suggesting expected changes in the metric under study.
+
+In the combined dataset, predictions show a stable trend for initial periods, becoming more variable after 20 years. This increased variability, especially in the first PCA component, might reflect influences from Asian country data dynamics.
+
+In the european country dataset, forecasts indicate slight variations across all principal components, showing less variability compared to the combined dataset.
+
+In the asian country dataset, both principal components exhibit strong fluctuations, indicating a higher level of variability throughout the forecast periods.
+
+These forecasts provide valuable insights for anticipating future trends and preparing strategies accordingly. The variability in predictions, particularly in the Asian dataset, underscores the dynamic nature of the data and potential challenges in forecasting.
+
+```{r, echo = TRUE}
+multistep <- predict(model1.ftsm, h=3)
+multistep
+multistep$mean$y
+multistep$lower$y
+multistep$upper$y
+
+multistep <- predict(model2.ftsm, h=3)
+multistep
+multistep$mean$y
+multistep$lower$y
+multistep$upper$y
+
+multistep <- predict(model3.ftsm, h=3)
+multistep
+multistep$mean$y
+multistep$lower$y
+multistep$upper$y
+```
+
+# Stationarity test
+
+Lastly, we conducted Monte Carlo tests to assess the stationarity of functional time series for the three datasets. The null hypothesis for each test was that the series is stationary.
+
+Combined country data - p-value is 0.045, thus we reject the null hypothesis, indicating potentially non-stationarity of the data.
+
+European country data - p-value is 0.482, thus we cannot reject the null hypothesis, indicating stationary data.
+
+Asian country data - p-value is 0.122, thus we cannot reject the null hypothesis, indicating stationary data.
+
+```{r, echo = TRUE}
+# Stationarity
+T_stationary(tf$y)
+T_stationary(euf$y)
+T_stationary(asf$y)
+```
