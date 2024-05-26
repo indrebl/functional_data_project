@@ -660,36 +660,33 @@ model3.ftsm$varprop
 
 # Functional timeseries forecasting
 
-We extended our time series modeling by performing multistep forecasts using functional time series models developed from combined, European, and Asian datasets. The models predict future values by leveraging historical trends captured in the data.
+We conducted a one-step ahead forecast using our functional time series model derived from the combined dataset. This approach aimed to project the next immediate value of the Total Fertility Rate (TFR) based on the established patterns in the historical data, recalculated for each year from 1950 to 2018.
 
-Forecasts were generated in a matrix format, with each row representing a base year and each column a future forecast period. For instance, a forecast for the 38th period based on the base year 1950 predicts a value of 2.6, suggesting expected changes in the metric under study.
+The forecast was generated using the predict function, specifying a horizon (h=1) to obtain the immediate next value for each historical point in our series. Each year's forecast incorporates only the data available up to that year, effectively providing a snapshot of what the model would have predicted for the year following each data point. This prediction includes the central forecast (mean) and the corresponding upper and lower confidence bounds.
 
-In the combined dataset, predictions show a stable trend for initial periods, becoming more variable after 20 years. This increased variability, especially in the first PCA component, might reflect influences from Asian country data dynamics.
+The one-step forecast produced a sequence of predicted TFR values for the year immediately following each historical year, from 1950 to 2018.
 
-In the European country dataset, forecasts indicate slight variations across all principal components, showing less variability compared to the combined dataset.
+For the combined country data, the forecasted TFR values exhibit a decreasing trend over the decades, reflecting a long-term decrease in fertility rates as analyzed from sequential yearly predictions. This method provides insights into the model’s ability to adapt and predict based on varying amounts of historical data.
 
-In the Asian country dataset, both principal components exhibit strong fluctuations, indicating a higher level of variability throughout the forecast periods.
+For the european country data, the decreasing trend in the mean forecast line suggests that the model predicts a gradual decline in fertility rates over the forecast period. This could be indicative of demographic changes, such as shifts in societal norms, economic conditions and so on. Upper and lower bounds to the mean function indicate a tight interval, meaning the model is highly confident in its predictions.
 
-These forecasts provide valuable insights for anticipating future trends and preparing strategies accordingly. The variability in predictions, particularly in the Asian dataset, underscores the dynamic nature of the data and potential challenges in forecasting.
+Lastly, for the asian data, the forecasted decline in TFR could reflect ongoing demographic transitions within Asian populations, such as increased urbanization, changes in economic conditions, higher education levels, and shifting societal norms that influence family planning decisions. The spacing between the upper and lower confidence bounds appears consistent and moderately tight across the forecast period, indicating a relatively stable level of uncertainty in the forecast.
 
 ```{r, echo = TRUE}
-multistep <- predict(model1.ftsm, h=3)
-multistep
-multistep$mean$y
-multistep$lower$y
-multistep$upper$y
+oneStep <- predict(model1.ftsm, h=1)
+plot(oneStep$mean$y, type="l", ylab = "TFR", xlab = "Years", ylim = c(0,3))
+lines(oneStep$lower$y, col=2, lty=2)
+lines(oneStep$upper$y, col=2, lty=2)
 
-multistep <- predict(model2.ftsm, h=3)
-multistep
-multistep$mean$y
-multistep$lower$y
-multistep$upper$y
+oneStep <- predict(model2.ftsm, h=1)
+plot(oneStep$mean$y, type="l", ylab = "TFR", xlab = "Years", ylim = c(0,3))
+lines(oneStep$lower$y, col=2, lty=2)
+lines(oneStep$upper$y, col=2, lty=2)
 
-multistep <- predict(model3.ftsm, h=3)
-multistep
-multistep$mean$y
-multistep$lower$y
-multistep$upper$y
+oneStep <- predict(model3.ftsm, h=1)
+plot(oneStep$mean$y, type="l", ylab = "TFR", xlab = "Years", ylim = c(0,3))
+lines(oneStep$lower$y, col=2, lty=2)
+lines(oneStep$upper$y, col=2, lty=2)
 ```
 
 # Stationarity test
