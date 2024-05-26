@@ -17,7 +17,7 @@ library(tidyr)
 library(zoo)
 library(ftsa)
 
-data <- read_excel("C:/Users/tucas/Downloads/undesa_pd_2019_world_fertility_dataset.xlsx",
+data <- read_excel("C:/Users/Indre/Downloads/undesa_pd_2019_world_fertility_dataset.xlsx",
                    sheet = "FERTILITY INDICATORS", skip = 6)
 
 data <- data[, 1:6]
@@ -126,11 +126,11 @@ ggplot(final_data, aes(x = Date, y = ValueLog, group = `Country or Area`, color 
 # Smoothing  
 
 Due to the nature of our data, the B-Spline basis smoothing method was chosen. After 
-experimenting with different smothing parameters, we decided on: number of Basis 
+experimenting with different smoothing parameters, we decided on: number of Basis 
 Functions (Nbasis) = 5, order of Basis Functions (Norder) = 4, smoothing Penalty 
 (Lambda) = \(1 \times 10^2\)
 
-```{r, echo = TRUE}
+```{r, echo = TRUE, fig.cap= "smoothed data."}
 # Get the range of years
 range_of_dates <- range(final_data$Date)
 
@@ -190,9 +190,9 @@ plot(combined_fd)
 
 # Mean and Standard Deviation
 
-For the smoothed data, we calculated the mean function (red dotted line), standard deviation (blue dotted line) and the mean function +- the standard deviation (both purple dotted lines). The red line shows the mean central tendency of all the countries in our dataset, which signifies a downward trend. The blue line shows the variability and dispersion of each countries curves, it seems that in the beginning the data is more spread out, but as years go on, the variability becomes smaller, but towards the year 2005 becomes more variable. Given the purple lines, some countries exceed the the mean function + standard deciation threshold, showing increased variability and uncertainty.
+For the smoothed data, we calculated the mean function (red dotted line), standard deviation (blue dotted line) and the mean function +- the standard deviation (both purple dotted lines). The red line shows the mean central tendency of all the countries in our dataset, which signifies a downward trend. The blue line shows the variability and dispersion of each countries curves, it seems that in the beginning the data is more spread out, but as years go on, the variability becomes smaller, but towards the year 2005 becomes more variable. Given the purple lines, some countries exceed the the mean function + standard deviation threshold, showing increased variability and uncertainty.
 
-```{r, echo = TRUE}
+```{r, echo = TRUE, fig.cap= "Mean and standard deviation on smoothed data."}
 plot(combined_fd)
 meanlogprec   = mean.fd(combined_fd)
 stddevlogprec = std.fd(combined_fd)
@@ -206,9 +206,9 @@ lines(meanlogprec+stddevlogprec, lwd=4, lty=2, col=6)
 
 # 2D and 3D covariance surface plot for Asian country data
 
-We then plotted seperate covariance surface plots both for Asian and European countries separatly to provide more insights in their own respective groups. For Asian data, in both of the covariance surface plots we can see that in the beginning the covariance values of these countries are quite variable, meaning the total fertility rates are not correlated strongly, however, towards the end we can see a peak, signifying a large covariance value, meaning the countries' total fertility rates tend to increase and decrease together.
+We then plotted separate covariance surface plots both for Asian and European countries separately to provide more insights in their own respective groups. For Asian data, in both of the covariance surface plots we can see that in the beginning the covariance values of these countries are quite variable, meaning the total fertility rates are not correlated strongly, however, towards the end we can see a peak, signifying a large covariance value, meaning the countries' total fertility rates tend to increase and decrease together.
 
-```{r, echo = TRUE}
+```{r, echo = TRUE, fig.cap= "3D covariance matrix for Asian country data."}
 # Calculate the covariance matrix for Asian country data
 covariance_matrix_asia <- cov(asia_coefs)
 
@@ -217,7 +217,8 @@ persp(covariance_matrix_asia,  theta=-45, phi=25, r=3, expand = 0.5,
       ticktype='detailed',
       xlab = "Time", ylab = "Time", zlab = "Covariance",
       main = "3D Covariance for Asian Country Data")
-
+```
+```{r, echo = TRUE, fig.cap= "2D covariance matrix for Asian country data."}
 # Plot the covariance surface in 2d for Asian country data
 contour(covariance_matrix_asia,
         ticktype = 'detailed',
@@ -227,7 +228,7 @@ contour(covariance_matrix_asia,
 
 # 2D and 3D covariance surface plot for European country data
 
-Unlike the Asian data, which had a clear peak suggesting a strong correlation in a particular time period, the European data seems to have multiple peaks and valleys, suggesting more complex and variable relationships over time, also it shows quite low covariance values all across the board, further indicating their complex nature.
+Unlike the Asian data, which had a clear peak suggesting a strong correlation in a particular time period, the European data seems to have multiple peaks and valleys, suggesting more complex and variable relationships over time, also it shows quite low covariance values all across the board.
 
 ```{r, echo = TRUE}
 # Calculate the covariance matrix for European country data
@@ -248,93 +249,84 @@ contour(covariance_matrix_europe,
 
 # Boxplots
 
-Boxplots were plotted for the combined country data, asian country data and european country data separatly. The combined country boxplot indicates no outliers and an obvious downward trend, with a few countries somewhere around 2011 experiencing an increase in fertility rates. 
+Boxplots were plotted for the combined country data, Asian country data and European country data separately. The combined country boxplot indicates no outliers and an obvious downward trend, with a few countries somewhere around 2011 experiencing an increase in fertility rates. 
 
-The asian country boxplots shows a similar trend with less variability, which is natural, however there are two outliers. The upper outlier is Saudi Arabia and the lower outlier being Japan. Saudi Arabia was a rural country, however became very wealthy after oil discovery, which would affect their populations educational level as well as enabled access to planned parenthood, which explains the fertility rates going down. Japan, however, was and still is a lower outlier due to their demographic situation, they have the largest proportion of senior citizens in the world and are very career driven, thus creating a family is not a priority.
+The Asian country boxplots shows a similar trend with less variability, which is natural, however there are two outliers. The upper outlier is Saudi Arabia and the lower outlier being Japan. Saudi Arabia was a rural country, however became very wealthy after oil discovery, which would affect their populations educational level as well as enabled access to planned parenthood, which explains the fertility rates going down. Japan, however, was and still is a lower outlier due to their demographic situation, they have the largest proportion of senior citizens in the world and are very career driven, thus creating a family is not a priority.
 
-The european country boxplot seems to show a severe downtrend in fertility without any outliers, however in 2005 started to gain momentum for an upward trend. 
+The European country boxplot seems to show a severe downtrend in fertility without any outliers, however in 2005 started to gain momentum for an upward trend. 
 
-```{r, echo = TRUE}
+```{r, echo = TRUE, results='hide', fig.width = 4, fig.height = 3}
 boxplot(combined_fd, xlab = "year", ylab = "fertility", main = "Combined fertility")
-boxplot(asia_fd, xlab = "year", ylab = "fertility", main = "Asian fertility")
+asia <- boxplot(asia_fd, xlab = "year", ylab = "fertility", main = "Asian fertility")
 boxplot(europe_fd, xlab = "year", ylab = "fertility", main = "European fertility")
-
-outliers <- boxplot(asia_fd)$out
+```
+```{r, echo = TRUE}
+outliers <- asia$out
 print(outliers)
 ```
 
-# Functional PCA for combined country data
-
-For the combined country dataset we used a total of 4 principal components (harmonics), which account for 98.4% of variability. The first PCA function explains the most variability (91.7%). The is a general downward trend, gaining a upward momentum somewhere around the year 2011 in all PCA mean functions, with different variability.
-
-
-```{r, echo = TRUE}
-# PCA for combined country dataset
-nharm = 4
-pcalist = pca.fd(combined_fd, nharm, centerfns = TRUE)
-plot(pcalist, xlab = "year")
-```
-
-Applying varimax rotation to the functional PCA's, it is noticable that the first 3 functions explain the most variability in the dataset. The most variation can be seen in 3 distinct time periods, that is 1965, 1982, 2010, as indicated in first 3 PCA's.
-
-```{r, echo = TRUE}
-# Rotation for combined country dataset
-varmx <- varmx.pca.fd(pcalist)
-plot(varmx)
-```
 
 # Functional PCA for asian country data
 
-For the asian country data we also used a total of 4 principal components, which explain 99.3% of the variability. The most variability is explained by the first PCA. The first PCA shows similar results as the combined dataset, a clear downward trend with generally stable variability, becoming slightly smaller somewhere around 2010.
+For the Asian country data we used a total of 4 principal components, which explain 
+99.3% of the variability. Before rotation the majority of variance (81.8 %) is explained by the 1st PCA function which has a positive impact on the mean function throughout the the whole measurement period. The 2nd PCA function which explains 13.5 % of variance has a negative impact on the mean function up until 1980, and a positive impact after. Functions 3 and 4 show more complex tendencies and explain a much smaller portion of variance (2.4 and 1.6 % respectively)
 
-``` {r, echo = TRUE}
-# PCA for asian country dataset
+``` {r, echo = TRUE, fig.width = 3.5, fig.height = 3}
+# PCA for Asian country dataset
 nharm = 4
 pcalist = pca.fd(asia_fd, nharm, centerfns = TRUE)
+par(cex.main = 0.8)
 plot(pcalist, xlab="year")
 ```
+Varimax rotation was used to distribute the variance more evenly across the factors. 
+After rotation the 1st PCA function accounts for 55.3 % of the variance. It has a negative impact on the mean function from around the 1950's to 1970, and positive impact from then to the mid 2010's. The 2nd function explaining 27.4 % mainly has a negative impact on the mean function from 1950's to around 1990. The 3rd function (7.9 %) has a positive impact from the year 2000 and the 4th (8.7 %) positive impact until 1960 and a slight negative impact from 1960 to 1980.
 
-When applying the varimax rotation, the first two PCA's explain the most variability, showing the most variability during the 1990 and 2000 period as well as the year 1965, as well as slightly more variability around 2019 and 1950. 
 
-```{r, echo = TRUE}
-# Rotation for asian data
+``` {r, echo = TRUE, fig.width = 3.5, fig.height = 3}
+# Rotation for Asian data
 varmx_as <- varmx.pca.fd(pcalist)
+par(cex.main = 0.8)
 plot(varmx_as, xlab="year")
 ```
 
 # Functional PCA for european country data
 
-For european data, a total of 5 functional PCA's were calculated, which account for >99.9% of the variation. The mean function for european countries is declining more than asian countries. The most significant portions of variability were captued by the first 3 PCA's. The highest peaks of variation are seen at the beginning of data callection, around 1950, the variability then greatly declines and remains qutie steady with minor fluctuations, however an another peak in variability can be seen around 2008, which are captured by the 3 most major PCA's.
+For European data, 5components were used, which account for >99.9% of the variation. 
+Before rotation the percentage of variance explained was already quite well distributed across functions, however the interpretation was quite difficult. The 1st PCA function which explains 38.4 % of variance has a positive impact on the mean function up until the mid 1990's.The 2nd PCA function (31.9 %) has a positive impact on the mean function up until 1960, and
+again after 1980. The 3rd function (20.2 %) has a very complex structure. 4th function (6 %) shows negative impact until 1960, 5th (3.5 %) positive from 2010.
 
-
-```{r, echo = TRUE}
-# PCA for european data
+```{r, echo = TRUE, fig.width = 3.5, fig.height = 3}
+# PCA for European data
 nharm = 5
 pcalist = pca.fd(europe_fd, nharm, centerfns = TRUE)
+par(cex.main = 0.8)
 plot(pcalist, xlab="year")
 ```
+After rotation the 1st PCA function accounts for 25.5 % of the variance and has a complex structure. The 2nd function explaining 29.7 % mainly has a positive impact on the mean function from the mid 1980's to mid 2010's. The 3rd (21.8 %) mainly has a positive impact from 1950's to around 1980, the 4th (16.6 %) - negative impact until 1960, 5th (6.4 %) - positive from mid 2000's.
 
-Performing verimax rotation did not provide clearer insights.
+Overall both before and after rotation the PCA functions for European data are quite complex and difficult to interpret.
 
-```{r, echo = TRUE}
-# Rotation for european data
+
+```{r, echo = TRUE, fig.width = 3.5, fig.height = 3}
+# Rotation for European data
 varmx_eu <- varmx.pca.fd(pcalist)
+par(cex.main = 0.8)
 plot(varmx_eu, xlab="year")
 ```
 
 # Hypothesis testing
 # Two sample pointwise Z test
 
-First we will perform a two sample pointwise Z test to compare the pointwise mean functions of europe and asia, thus this hyptohtesis was proposed:
+First we will perform a two sample point-wise Z test to compare the point-wise mean functions of Europe and Asia, thus this hypothesis was proposed:
 
-H0: mu(europe) = mu(asia)
-H1: mu(europe) != mu(asia)
+H0: mu(Europe) = mu(Asia)
+H1: mu(Europe) != mu(Asia)
 
-There was a statistically significant difference between Europe’s and Asia’s mean fertility throughout the whole reported period. With Europe always showing a lower mean fertility compared to Asia. The difference is increases until the 1970’s when the difference is largest and has been shrinking since. The shrinking difference between Europe’s and Asia’s rates could be the result of the growing economy and better living conditions in Asia leading to lower birth rates.
+There was a statistically significant difference between Europe's and Asia's mean fertility throughout the whole reported period. With Europe always showing a lower mean fertility compared to Asia. The difference is increases until the 1970’s when the difference is largest and has been shrinking since. The shrinking difference between Europe's and Asians rates could be the result of the growing economy and better living conditions in Asia leading to lower birth rates.
 
 Critical value 2.100922
 ```{r, echo = FALSE}
-# Two samples pointwise t-test
+# Two samples point-wise t-test
 
 Ztwosample <- function(x, y, t.seq, alpha=0.05) {
   if(class(x) != "fd") stop("X must be fd object")
@@ -389,7 +381,7 @@ Ztwosample <- function(x, y, t.seq, alpha=0.05) {
 t.sq <- seq(1950.001, 2018.501, by=1)
 
 stat <- Ztwosample(x=europe_fd, y=asia_fd, t.seq = t.sq)
-stat
+stat$params
 ```
 
 # Two sample permutation test
@@ -423,7 +415,7 @@ Statistically significant difference between the two groups
 
 L2.stat.twosample <- function(x, y, t.seq, alpha=0.05, method=1:2, replications=100) {
   # method = 1: T stat
-  # method = 2: Bootsrap
+  # method = 2: Bootstrap
   if(class(x) != "fd") stop("X must be fd object")
   if(class(y) != "fd") stop("Y must be fd object")
   
@@ -499,10 +491,9 @@ L2.stat.twosample <- function(x, y, t.seq, alpha=0.05, method=1:2, replications=
 
 ```{r, echo = TRUE}
 stat <- L2.stat.twosample(x=europe_fd, y=asia_fd, t.seq = t.sq, method=1)
-stat
+stat$pvalue
 stat <- L2.stat.twosample(x=europe_fd, y=asia_fd, t.seq = t.sq, method=2, replications=500)
 stat$pvalue
-stat
 ```
 
 # Two sample F-statistic
@@ -518,7 +509,7 @@ Statistically significant difference between the two groups
 
 F.stat.twosample <- function(x, y, t.seq, alpha=0.05, method=1:2, replications=100) {
   # method = 1: T stat
-  # method = 2: Bootsrap
+  # method = 2: Bootstrap
   if(class(x) != "fd") stop("X must be fd object")
   if(class(y) != "fd") stop("Y must be fd object")
   
@@ -605,33 +596,33 @@ F.stat.twosample <- function(x, y, t.seq, alpha=0.05, method=1:2, replications=1
 
 ```{r, echo = TRUE}
 stat <- F.stat.twosample(x=europe_fd, y=asia_fd, t.seq = t.sq, method=1)
-stat
+stat$pvalue
 stat <- F.stat.twosample(x=europe_fd, y=asia_fd, t.seq = t.sq, method=2, replications=500)
 stat$pvalue
 ```
 
 # Timeseries modelling and forecasting
 
-Due to the nature of our data, we decided to perform timeseries modelling and forecasting. After creating functional timeseries object, we fitted them to separate models - combined, asian and european data. Their coefficients were visualized.
+Due to the nature of our data, we decided to perform time series modelling and forecasting. After creating functional time series object, we fitted them to separate models - combined, Asian and European data. Their coefficients were visualized.
 
-In the combined data plot, we can see that the beta1 and beta2 coefficients are quite stable for about 20 years, after that it becomes much more variable, beta 1 (first PCA) being more severly variated, possibly due to asian country data.
+In the combined data plot, we can see that the beta1 and beta2 coefficients are quite stable for about 20 years, after that it becomes much more variable, beta 1 (first PCA) being more severely varied, possibly due to Asian country data.
 
-In the european data plot, we can see that beta1, beta2 and beta3 are a little bit varied, but not as much as the combined data plot.
+In the European data plot, we can see that beta1, beta2 and beta3 are a little bit varied, but not as much as the combined data plot.
 
-In the asian data plot, beta1 and beta2 are both strongly fluctuated, indicating more variability all across the board.
+In the Asian data plot, beta1 and beta2 are both strongly fluctuated, indicating more variability all across the board.
 
 ```{r, echo = TRUE}
-# Get the matrix of combined, european and asian functional data
+# Get the matrix of combined, European and Asian functional data
 total_fertility_m <- eval.fd(t.sq, combined_fd, returnMatrix = TRUE)
 eu_fertility_m <- eval.fd(t.sq, europe_fd, returnMatrix = TRUE)
 as_fertility_m <- eval.fd(t.sq, asia_fd, returnMatrix = TRUE)
 
-# Create functional timeseries objects
+# Create functional time series objects
 tf <- fts(x = t.sq, y=total_fertility_m, yname = "TFR", xname = "Years")
 euf <- fts(x = t.sq, y=eu_fertility_m, yname = "TFR", xname = "Years")
 asf <- fts(x = t.sq, y=as_fertility_m, yname = "TFR", xname = "Years")
 
-# Create functional timeseries modelling with the most major PCA's
+# Create functional time series modelling with the most major PCA's
 model1.ftsm <- ftsm(tf, order=2)
 summary(model1.ftsm)
 model2.ftsm <- ftsm(euf, order=3)
@@ -675,9 +666,9 @@ Forecasts were generated in a matrix format, with each row representing a base y
 
 In the combined dataset, predictions show a stable trend for initial periods, becoming more variable after 20 years. This increased variability, especially in the first PCA component, might reflect influences from Asian country data dynamics.
 
-In the european country dataset, forecasts indicate slight variations across all principal components, showing less variability compared to the combined dataset.
+In the European country dataset, forecasts indicate slight variations across all principal components, showing less variability compared to the combined dataset.
 
-In the asian country dataset, both principal components exhibit strong fluctuations, indicating a higher level of variability throughout the forecast periods.
+In the Asian country dataset, both principal components exhibit strong fluctuations, indicating a higher level of variability throughout the forecast periods.
 
 These forecasts provide valuable insights for anticipating future trends and preparing strategies accordingly. The variability in predictions, particularly in the Asian dataset, underscores the dynamic nature of the data and potential challenges in forecasting.
 
