@@ -693,7 +693,7 @@ lines(oneStep$upper$y, col=2, lty=2)
 
 Lastly, we conducted Monte Carlo tests to assess the stationarity of functional time series for the three datasets. The null hypothesis for each test was that the series is stationary.
 
-Combined country data - p-value is 0.045, thus we reject the null hypothesis, indicating potentially non-stationarity of the data.
+Combined country data - p-value is 0.059, thus we cannot reject the null hypothesis, indicating stationary data.
 
 European country data - p-value is 0.482, thus we cannot reject the null hypothesis, indicating stationary data.
 
