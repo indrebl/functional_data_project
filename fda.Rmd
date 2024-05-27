@@ -644,16 +644,19 @@ The second model for European country data exhibits a mean function that continu
 
 The third model for Asian countries displays a consistent declining mean function. Contrary to initial observations, the first principal component (PCA) significantly shapes the dataset, explaining 82% of the variability. The second PCA, accounting for 13.46% of the variance, exhibits notable fluctuations around year 20, highlighting additional, nuanced dynamics not captured by the first PCA.
 
-```{r, echo = TRUE}
-matplot(model1.ftsm$basis, type="l")
-matplot(model1.ftsm$basis[,-1], type="l")
-
+```{r, echo = TRUE, fig.cap= "European country model analysis of PCA variability."}
 matplot(model2.ftsm$basis, type="l")
+```
+```{r, echo = TRUE, fig.cap= "European country model analysis of PCA variability, without mean function."}
 matplot(model2.ftsm$basis[,-1], type="l")
-
+```
+```{r, echo = TRUE, fig.cap= "Asian country model analysis of PCA variability."}
 matplot(model3.ftsm$basis, type="l")
+```
+```{r, echo = TRUE, fig.cap= "Asian country model analysis of PCA variability, without mean function."}
 matplot(model3.ftsm$basis[,-1], type="l")
-
+```
+```{r, echo = TRUE}
 model1.ftsm$varprop
 model2.ftsm$varprop
 model3.ftsm$varprop
@@ -673,17 +676,19 @@ For the european country data, the decreasing trend in the mean forecast line su
 
 Lastly, for the asian data, the forecasted decline in TFR could reflect ongoing demographic transitions within Asian populations, such as increased urbanization, changes in economic conditions, higher education levels, and shifting societal norms that influence family planning decisions. The spacing between the upper and lower confidence bounds appears consistent and moderately tight across the forecast period, indicating a relatively stable level of uncertainty in the forecast.
 
-```{r, echo = TRUE}
+```{r, echo = TRUE, fig.cap= "Combined country model forecast."}
 oneStep <- predict(model1.ftsm, h=1)
 plot(oneStep$mean$y, type="l", ylab = "TFR", xlab = "Years", ylim = c(0,3))
 lines(oneStep$lower$y, col=2, lty=2)
 lines(oneStep$upper$y, col=2, lty=2)
-
+```
+```{r, echo = TRUE, fig.cap= "European country model forecast."}
 oneStep <- predict(model2.ftsm, h=1)
 plot(oneStep$mean$y, type="l", ylab = "TFR", xlab = "Years", ylim = c(0,3))
 lines(oneStep$lower$y, col=2, lty=2)
 lines(oneStep$upper$y, col=2, lty=2)
-
+```
+```{r, echo = TRUE, fig.cap= "Asian country model forecast."}
 oneStep <- predict(model3.ftsm, h=1)
 plot(oneStep$mean$y, type="l", ylab = "TFR", xlab = "Years", ylim = c(0,3))
 lines(oneStep$lower$y, col=2, lty=2)
