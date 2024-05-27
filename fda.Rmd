@@ -638,11 +638,8 @@ plot(model3.ftsm$coeff)
 
 Then, we inspected the basis matrices of all the 3 models to further inspect the variability captured by the PCA's.
 
-The first model for the combined country data shows that the general mean function, indicated by the black line, exhibits a declining trend. The dotted red line, representing Phi1, appears relatively flat across the dataset. However, it is crucial to note that Phi1 captures approximately 91.83% of the dataset's variability, indicating its significant but subtle influence. The green line, Phi2, while only accounting for about 5.41% of the variability, shows minor fluctuations, particularly noticeable after year 20. These fluctuations, though small, highlight additional patterns or deviations not encompassed by Phi1
+The first model is for the combined country data. The first component captures approximately 91.83% of the dataset's variability. Phi1 is positive throughout the measurement period and remains relatively consistent, with a slight downwards trend from 1990's. The second component only accounts for  5.41% of the variability. Phi2 consists of a negative contribution until 1980, and a positive contribution afterwards.
 
-The second model for European country data exhibits a mean function that continues the declining trend observed in the combined country model. Unlike the combined model, all three principal components in this European dataset display noticeable fluctuations, with each component significantly contributing to the data's variability. The variance proportions for these components are 38.76% for the first PCA, 31.97% for the second PCA, and 20.06% for the third PCA. Contrary to the initial observation, the first PCA, not the third, captures the most variability, though all components show significant variance indicating diverse underlying patterns or influences. The third PCA, while the least in terms of variance explained compared to the first two, still shows substantial variability, reflecting more complex dynamics or interactions within the European data set.
-
-The third model for Asian countries displays a consistent declining mean function. Contrary to initial observations, the first principal component (PCA) significantly shapes the dataset, explaining 82% of the variability. The second PCA, accounting for 13.46% of the variance, exhibits notable fluctuations around year 20, highlighting additional, nuanced dynamics not captured by the first PCA.
 
 ```{r, echo = TRUE, fig.cap= "Combined country model analysis of PCA variability."}
 colors <- 1:(ncol(model1.ftsm$basis) - 1)
@@ -651,12 +648,18 @@ abline(h = 0, col = "black", lty = 3)
 legend("topright", legend=colnames(model1.ftsm$basis)[-1],lty=1, col=colors)
 ```
 
+The second model is for the European country data. Compared to the combined model, the percentages of explained variability are more equally distributed to all three principal components. The variance proportions for these components are 38.76% for the first component, 31.97% for the second component and 20.06% for the third component. Phi1 consists of a positive contribution until late 1990's, and a negative contribution afterwards to variability. Phi2 fluctuates in weight, but remains positive throughout most of the measurement period, only dipping into a negative contribution between the mid 1960's and mid 1970's. Phi3 has both positive and negative contributions and is difficult to interpret.
+
 ```{r, echo = TRUE, fig.cap= "European country model analysis of PCA variability."}
 colors <- 1:(ncol(model2.ftsm$basis) - 1)
 matplot(model2.ftsm$basis[,-1], type="l",col=colors,)
 abline(h = 0, col = "black", lty = 3)
 legend("topright", legend=colnames(model2.ftsm$basis)[-1],lty=1, col=colors)
 ```
+
+The third model is for the Asian countries. The first principal component explains 82% of the variability. 
+Phi1 is positive throughout the measurement period and remains relatively consistent, with a slight downwards trend from the mid 1990's. The second component accounts for 13.46% of the variance. Phi2 consists of a positive contribution to variability. until 1980, and a negative contribution afterwards.
+
 ```{r, echo = TRUE, fig.cap= "Asian country model analysis of PCA variability."}
 colors <- 1:(ncol(model3.ftsm$basis) - 1)
 matplot(model3.ftsm$basis[,-1], type="l",col=colors,)
@@ -677,11 +680,11 @@ The forecast was generated using the predict function, specifying a horizon (h=1
 
 The one-step forecast produced a sequence of predicted TFR values for the year immediately following each historical year, from 1950 to 2018.
 
-For the combined country data, the forecasted TFR values exhibit a decreasing trend over the decades, reflecting a long-term decrease in fertility rates as analyzed from sequential yearly predictions. This method provides insights into the model’s ability to adapt and predict based on varying amounts of historical data.
+For the combined country data, the forecast TFR values exhibit a decreasing trend over the decades, reflecting a long-term decrease in fertility rates as analyzed from sequential yearly predictions. 
 
-For the european country data, the decreasing trend in the mean forecast line suggests that the model predicts a gradual decline in fertility rates over the forecast period. This could be indicative of demographic changes, such as shifts in societal norms, economic conditions and so on. Upper and lower bounds to the mean function indicate a tight interval, meaning the model is highly confident in its predictions.
+For the European country data, the decreasing trend in the mean forecast line suggests that the model predicts a gradual decline in fertility rates over the forecast period. This could be indicative of demographic changes, such as shifts in societal norms, economic conditions and so on. Upper and lower bounds to the mean function indicate a tight interval, meaning the model is highly confident in its predictions.
 
-Lastly, for the asian data, the forecasted decline in TFR could reflect ongoing demographic transitions within Asian populations, such as increased urbanization, changes in economic conditions, higher education levels, and shifting societal norms that influence family planning decisions. The spacing between the upper and lower confidence bounds appears consistent and moderately tight across the forecast period, indicating a relatively stable level of uncertainty in the forecast.
+Lastly, for the Asian data, the forecast decline in TFR could reflect ongoing demographic transitions within Asian populations, such as increased urbanization, changes in economic conditions, higher education levels, and shifting societal norms that influence family planning decisions. The spacing between the upper and lower confidence bounds appears consistent across the forecast period, indicating a relatively stable level of uncertainty in the forecast. The difference between upper and lower bounds is also more significant compared to the European data, likely because of the higher variability of historical Asian data.
 
 ```{r, echo = TRUE, fig.cap= "Combined country model forecast."}
 oneStep <- predict(model1.ftsm, h=1)
@@ -701,6 +704,8 @@ plot(oneStep$mean$y, type="l", ylab = "TFR", xlab = "Years", ylim = c(0,3))
 lines(oneStep$lower$y, col=2, lty=2)
 lines(oneStep$upper$y, col=2, lty=2)
 ```
+
+
 
 # Stationarity test
 
