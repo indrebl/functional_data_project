@@ -644,17 +644,21 @@ The second model for European country data exhibits a mean function that continu
 
 The third model for Asian countries displays a consistent declining mean function. Contrary to initial observations, the first principal component (PCA) significantly shapes the dataset, explaining 82% of the variability. The second PCA, accounting for 13.46% of the variance, exhibits notable fluctuations around year 20, highlighting additional, nuanced dynamics not captured by the first PCA.
 
-```{r, echo = TRUE, fig.cap= "European country model analysis of PCA variability."}
-matplot(model2.ftsm$basis, type="l")
+```{r, echo = TRUE, fig.cap= "Combined country model analysis of PCA variability."}
+colors <- 1:(ncol(model1.ftsm$basis) - 1)
+matplot(model1.ftsm$basis[,-1], type="l",col=colors,)
+legend("topright", legend=colnames(model1.ftsm$basis)[-1],lty=1, col=colors)
 ```
-```{r, echo = TRUE, fig.cap= "European country model analysis of PCA variability, without mean function."}
-matplot(model2.ftsm$basis[,-1], type="l")
+
+```{r, echo = TRUE, fig.cap= "European country model analysis of PCA variability."}
+colors <- 1:(ncol(model2.ftsm$basis) - 1)
+matplot(model2.ftsm$basis[,-1], type="l",col=colors,)
+legend("topright", legend=colnames(model2.ftsm$basis)[-1],lty=1, col=colors)
 ```
 ```{r, echo = TRUE, fig.cap= "Asian country model analysis of PCA variability."}
-matplot(model3.ftsm$basis, type="l")
-```
-```{r, echo = TRUE, fig.cap= "Asian country model analysis of PCA variability, without mean function."}
-matplot(model3.ftsm$basis[,-1], type="l")
+colors <- 1:(ncol(model3.ftsm$basis) - 1)
+matplot(model3.ftsm$basis[,-1], type="l",col=colors,)
+legend("topright", legend=colnames(model3.ftsm$basis)[-1],lty=1, col=colors)
 ```
 ```{r, echo = TRUE}
 model1.ftsm$varprop
