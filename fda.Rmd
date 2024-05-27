@@ -647,17 +647,20 @@ The third model for Asian countries displays a consistent declining mean functio
 ```{r, echo = TRUE, fig.cap= "Combined country model analysis of PCA variability."}
 colors <- 1:(ncol(model1.ftsm$basis) - 1)
 matplot(model1.ftsm$basis[,-1], type="l",col=colors,)
+abline(h = 0, col = "black", lty = 3)
 legend("topright", legend=colnames(model1.ftsm$basis)[-1],lty=1, col=colors)
 ```
 
 ```{r, echo = TRUE, fig.cap= "European country model analysis of PCA variability."}
 colors <- 1:(ncol(model2.ftsm$basis) - 1)
 matplot(model2.ftsm$basis[,-1], type="l",col=colors,)
+abline(h = 0, col = "black", lty = 3)
 legend("topright", legend=colnames(model2.ftsm$basis)[-1],lty=1, col=colors)
 ```
 ```{r, echo = TRUE, fig.cap= "Asian country model analysis of PCA variability."}
 colors <- 1:(ncol(model3.ftsm$basis) - 1)
 matplot(model3.ftsm$basis[,-1], type="l",col=colors,)
+abline(h = 0, col = "black", lty = 3)
 legend("topright", legend=colnames(model3.ftsm$basis)[-1],lty=1, col=colors)
 ```
 ```{r, echo = TRUE}
