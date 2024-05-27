@@ -256,11 +256,12 @@ The Asian country boxplots shows a similar trend with less variability, which is
 
 The European country boxplot seems to show a severe downtrend in fertility without any outliers, however in 2005 started to gain momentum for an upward trend. 
 
-```{r, echo = TRUE, results='hide', fig.width = 4, fig.height = 3}
-boxplot(combined_fd, xlab = "year", ylab = "fertility", main = "Combined fertility")
+```{r, echo = TRUE, results='hide', fig.width = 4, fig.height = 3.5, fig.cap="Fertility boxplot"}
+combined<-boxplot(combined_fd, xlab = "year", ylab = "fertility", main = "Combined fertility")
 asia <- boxplot(asia_fd, xlab = "year", ylab = "fertility", main = "Asian fertility")
-boxplot(europe_fd, xlab = "year", ylab = "fertility", main = "European fertility")
+europe<-boxplot(europe_fd, xlab = "year", ylab = "fertility", main = "European fertility")
 ```
+
 ```{r, echo = TRUE}
 outliers <- asia$out
 print(outliers)
@@ -292,7 +293,7 @@ plot(varmx_as, xlab="year")
 
 # Functional PCA for european country data
 
-For European data, 5components were used, which account for >99.9% of the variation. 
+For European data, 5 components were used, which account for >99.9% of the variation. 
 Before rotation the percentage of variance explained was already quite well distributed across functions, however the interpretation was quite difficult. The 1st PCA function which explains 38.4 % of variance has a positive impact on the mean function up until the mid 1990's.The 2nd PCA function (31.9 %) has a positive impact on the mean function up until 1960, and
 again after 1980. The 3rd function (20.2 %) has a very complex structure. 4th function (6 %) shows negative impact until 1960, 5th (3.5 %) positive from 2010.
 
@@ -608,10 +609,6 @@ Due to the nature of our data, we decided to perform time series modelling and f
 
 In the combined data plot, we can see that the beta1 and beta2 coefficients are quite stable for about 20 years, after that it becomes much more variable, beta 1 (first PCA) being more severely varied, possibly due to Asian country data.
 
-In the European data plot, we can see that beta1, beta2 and beta3 are a little bit varied, but not as much as the combined data plot.
-
-In the Asian data plot, beta1 and beta2 are both strongly fluctuated, indicating more variability all across the board.
-
 ```{r, echo = TRUE}
 # Get the matrix of combined, European and Asian functional data
 total_fertility_m <- eval.fd(t.sq, combined_fd, returnMatrix = TRUE)
@@ -630,9 +627,22 @@ model2.ftsm <- ftsm(euf, order=3)
 summary(model2.ftsm)
 model3.ftsm <- ftsm(asf, order=2)
 summary(model3.ftsm)
-
+```
+```{r, echo = FALSE, fig.cap="Combined country data model coefficients.", fig.width = 4, fig.height = 3}
 plot(model1.ftsm$coeff)
+  
+```
+
+In the European data plot, we can see that beta1, beta2 and beta3 are a little bit varied, but not as much as the combined data plot.
+
+```{r, echo = FALSE, fig.cap="European country data model coefficients.", fig.width = 4, fig.height = 3}
 plot(model2.ftsm$coeff)
+  
+```
+
+In the Asian data plot, beta1 and beta2 are both strongly fluctuated, indicating more variability all across the board.
+
+```{r, echo = FALSE, fig.cap="Asian country data model coefficients.", fig.width = 4, fig.height = 3}
 plot(model3.ftsm$coeff)
 ```
 
