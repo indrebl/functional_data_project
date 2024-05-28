@@ -36,13 +36,24 @@ country_data <- data_filtered %>%
 final_data <- country_data %>%
   mutate(Continent = ifelse(`Country or Area` %in% largest_european_countries, "Europe", "Asia"))
 
+# Draw the graph
+ggplot(final_data, aes(x = Date, y = Value, group = `Country or Area`, color = `Continent`)) +
+  geom_line() + # Draw lines for each country
+  scale_color_manual(values = c("Europe" = "blue", "Asia" = "red")) + # Set colors for continents
+  labs(title = "Fertility Rates Over Time by Continent",
+       x = "Date",
+       y = "Fertility Rate",
+       color = "Continent") +
+  theme_minimal() + # Use a minimal theme
+  theme(legend.position = "bottom") # Adjust legend position
+
 # Apply logarithmic transformation
 final_data <- final_data %>%
   mutate(ValueLog = log(Value))
 
 View(final_data)
 
-# Draw the graph
+# Draw the graph with logarithmic transformation
 ggplot(final_data, aes(x = Date, y = ValueLog, group = `Country or Area`, color = `Continent`)) +
   geom_line() + # Draw lines for each country
   scale_color_manual(values = c("Europe" = "blue", "Asia" = "red")) + # Set colors for continents
@@ -289,14 +300,22 @@ plot(model1.ftsm$coeff)
 plot(model2.ftsm$coeff)
 plot(model3.ftsm$coeff)
 
-matplot(model1.ftsm$basis, type="l")
-matplot(model1.ftsm$basis[,-1], type="l")
+colors <- 1:(ncol(model1.ftsm$basis) - 1)
+matplot(model1.ftsm$basis[,-1], type="l",col=colors,)
+abline(h = 0, col = "black", lty = 3)
+legend("topright", legend=colnames(model1.ftsm$basis)[-1],lty=1, col=colors)
 
-matplot(model2.ftsm$basis, type="l")
-matplot(model2.ftsm$basis[,-1], type="l")
 
-matplot(model3.ftsm$basis, type="l")
-matplot(model3.ftsm$basis[,-1], type="l")
+colors <- 1:(ncol(model2.ftsm$basis) - 1)
+matplot(model2.ftsm$basis[,-1], type="l",col=colors,)
+abline(h = 0, col = "black", lty = 3)
+legend("topright", legend=colnames(model2.ftsm$basis)[-1],lty=1, col=colors)
+
+
+colors <- 1:(ncol(model3.ftsm$basis) - 1)
+matplot(model3.ftsm$basis[,-1], type="l",col=colors,)
+abline(h = 0, col = "black", lty = 3)
+legend("topright", legend=colnames(model3.ftsm$basis)[-1],lty=1, col=colors)
 
 model1.ftsm$varprop
 model2.ftsm$varprop
@@ -320,24 +339,6 @@ oneStep
 plot(oneStep$mean$y, type="l", ylab = "TFR", xlab = "Years", ylim = c(0,5))
 lines(oneStep$lower$y, col=2, lty=2)
 lines(oneStep$upper$y, col=2, lty=2)
-
-multistep <- predict(model1.ftsm, h=3)
-multistep
-multistep$mean$y
-multistep$lower$y
-multistep$upper$y
-
-multistep <- predict(model2.ftsm, h=3)
-multistep
-multistep$mean$y
-multistep$lower$y
-multistep$upper$y
-
-multistep <- predict(model3.ftsm, h=3)
-multistep
-multistep$mean$y
-multistep$lower$y
-multistep$upper$y
 
 # Stationarity
 T_stationary(tf$y)
